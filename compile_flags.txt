@@ -1,0 +1,4 @@
+# just get clangd working
+-I/home/mg/.pebble-sdk/SDKs/4.9.77/sdk-core/pebble/aplite/include
+-I/nix/store/s4rdnd3g0kr0r4dikmhgr33z53w6a9p5-source/build/include
+-I/home/mg/git/pebble/myproject/build/aplite
