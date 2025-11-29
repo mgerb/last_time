@@ -2,7 +2,9 @@
   "name": "myproject",
   "author": "MakeAwesomeHappen",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
   "dependencies": {},
   "pebble": {
@@ -25,7 +27,29 @@
       "dummy"
     ],
     "resources": {
-      "media": []
+      "media": [
+        {
+          "type": "font",
+          "name": "FONT_ICONS_28",
+          "file": "fonts/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[ -~\\uF242]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_LILEX_MONO_14",
+          "file": "fonts/LilexNerdFontMono-Bold.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_LILEX_MONO_45",
+          "file": "fonts/LilexNerdFontMono-Regular.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_LILEX_MONO_45_BOLD",
+          "file": "fonts/LilexNerdFontMono-Bold.ttf"
+        }
+      ]
     }
   }
 }
