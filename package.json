@@ -23,6 +23,9 @@
     "watchapp": {
       "watchface": true
     },
+    "capabilities": [
+      "health"
+    ],
     "messageKeys": [
       "dummy"
     ],
@@ -31,23 +34,34 @@
         {
           "type": "font",
           "name": "FONT_ICONS_28",
-          "file": "fonts/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[ -~\\uF242]"
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[ -~\\uE21D]"
         },
+        
         {
           "type": "font",
           "name": "FONT_LILEX_MONO_14",
-          "file": "fonts/LilexNerdFontMono-Bold.ttf"
+          "file": "fonts/Lilex/LilexNerdFontMono-Bold.ttf"
         },
         {
           "type": "font",
           "name": "FONT_LILEX_MONO_45",
-          "file": "fonts/LilexNerdFontMono-Regular.ttf"
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf"
         },
         {
           "type": "font",
           "name": "FONT_LILEX_MONO_45_BOLD",
-          "file": "fonts/LilexNerdFontMono-Bold.ttf"
+          "file": "fonts/Lilex/LilexNerdFontMono-Bold.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_PROGGY_CLEAN_MONO_18",
+          "file": "fonts/ProggyClean/ProggyCleanNerdFont-Regular.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_PROGGY_CLEAN_MONO_45",
+          "file": "fonts/ProggyClean/ProggyCleanNerdFont-Regular.ttf"
         }
       ]
     }
