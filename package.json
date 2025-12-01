@@ -24,10 +24,21 @@
       "watchface": true
     },
     "capabilities": [
-      "health"
+      "health",
+      "location"
     ],
     "messageKeys": [
-      "dummy"
+      "latitude",
+      "longitude",
+      "temperature_f",
+      "temperature_c",
+      "condition",
+      "high_f",
+      "high_c",
+      "low_f",
+      "low_c",
+      "sunrise",
+      "sunset"
     ],
     "resources": {
       "media": [
@@ -37,31 +48,15 @@
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
           "characterRegex": "[ -~\\uE21D]"
         },
-        
         {
           "type": "font",
-          "name": "FONT_LILEX_MONO_14",
-          "file": "fonts/Lilex/LilexNerdFontMono-Bold.ttf"
+          "name": "FONT_TERMINUS_MONO_14",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
         },
         {
           "type": "font",
-          "name": "FONT_LILEX_MONO_45",
-          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf"
-        },
-        {
-          "type": "font",
-          "name": "FONT_LILEX_MONO_45_BOLD",
-          "file": "fonts/Lilex/LilexNerdFontMono-Bold.ttf"
-        },
-        {
-          "type": "font",
-          "name": "FONT_PROGGY_CLEAN_MONO_18",
-          "file": "fonts/ProggyClean/ProggyCleanNerdFont-Regular.ttf"
-        },
-        {
-          "type": "font",
-          "name": "FONT_PROGGY_CLEAN_MONO_45",
-          "file": "fonts/ProggyClean/ProggyCleanNerdFont-Regular.ttf"
+          "name": "FONT_TERMINUS_MONO_48",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
         }
       ]
     }

@@ -9,6 +9,8 @@ static TextLayer *s_weather_layer_icon;
 static TextLayer *s_steps_layer_text;
 static TextLayer *s_steps_layer_icon;
 #endif
+static TextLayer *s_condition_layer;
+static TextLayer *s_temperature_layer;
 static TextLayer *s_utc_icon_layer;
 static TextLayer *s_utc_layer;
 static TextLayer *s_date_layer;
@@ -25,11 +27,49 @@ static char *ICON_BATTERY_25 = "";
 static char *ICON_BATTERY_50 = "";
 static char *ICON_BATTERY_75 = "";
 static char *ICON_BATTERY_100 = "";
-static char *ICON_CLOUDY = "\ue21d";
+static char *ICON_CLOUDY = "\ue21d"; // TODO:
 static char *ICON_STEPS = "";
 static char *ICON_UTC = "";
 
-static int PADDING = 2;
+static char temperature_buffer[8];
+static char condition_buffer[20];
+
+static const int PADDING_X = 4;
+static const int WEATHER_GAP = 2;
+
+void position_weather_icon(void);
+
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+    Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_temperature_f);
+    Tuple *condition_tuple = dict_find(iterator, MESSAGE_KEY_condition);
+
+    if (!temp_tuple || !condition_tuple) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
+                condition_tuple);
+        return;
+    }
+
+    snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°", (int)temp_tuple->value->int32);
+    snprintf(condition_buffer, sizeof(condition_buffer), "%s", condition_tuple->value->cstring);
+    text_layer_set_text(s_temperature_layer, temperature_buffer);
+    text_layer_set_text(s_condition_layer, condition_buffer);
+    position_weather_icon();
+
+    printf("temperature %s", temperature_buffer);
+    printf("weather_condition %s", condition_buffer);
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
 
 static void update_time() {
     // Get a tm structure
@@ -73,6 +113,19 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     update_time();
     update_date_and_day();
     update_utc_time();
+
+    // Send message to update weather.
+    if (tick_time->tm_min % 30 == 0) {
+        // Begin dictionary
+        DictionaryIterator *iter;
+        app_message_outbox_begin(&iter);
+
+        // Add a key-value pair
+        dict_write_uint8(iter, 0, 0);
+
+        // Send the message!
+        app_message_outbox_send();
+    }
 }
 
 static void update_battery_icon_and_text(BatteryChargeState state) {
@@ -81,7 +134,7 @@ static void update_battery_icon_and_text(BatteryChargeState state) {
     text_layer_set_text(s_battery_layer_text, battery_buffer);
 
     // Pick icon based on charge percentage.
-    char *icon = ICON_BATTERY_50;
+    char *icon = ICON_BATTERY_100;
     if (state.charge_percent <= 5) {
         icon = ICON_BATTERY_0;
     } else if (state.charge_percent <= 30) {
@@ -156,10 +209,10 @@ TextLayer *render_icon(Layer *container_layer, char *text, int x, int y, bool x_
 }
 
 void load_fonts() {
-    s_font_primary = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LILEX_MONO_45));
+    s_font_primary = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_48));
     // s_font_lilex_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LILEX_MONO_14));
-    s_font_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PROGGY_CLEAN_MONO_18));
-    s_font_primary_bold = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_LILEX_MONO_45_BOLD));
+    s_font_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_14));
+    s_font_primary_bold = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_48));
     s_font_icons = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_28));
 }
 
@@ -170,43 +223,85 @@ void unload_fonts() {
     fonts_unload_custom_font(s_font_icons);
 }
 
-void load_top_bar(Window *window) {
+void position_weather_icon(void) {
+    if (!s_weather_layer_icon || !s_temperature_layer) {
+        return;
+    }
+
+    // Place the icon immediately to the right of the temperature text with a fixed gap.
+    GSize temp_size = text_layer_get_content_size(s_temperature_layer);
+    Layer *temp_layer = text_layer_get_layer(s_temperature_layer);
+    GRect temp_frame = layer_get_frame(temp_layer);
+
+    Layer *icon_layer = text_layer_get_layer(s_weather_layer_icon);
+    GRect icon_frame = layer_get_frame(icon_layer);
+    layer_set_frame(icon_layer, GRect(temp_frame.origin.x + temp_size.w + WEATHER_GAP, icon_frame.origin.y,
+                                      icon_frame.size.w, icon_frame.size.h));
+}
+
+void render_weather(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+    GRect bounds = layer_get_bounds(window_layer);
+    int temperature_row_height = 24;
+    int conditions_row_height = 16;
+
+    // Temperature text (top-left).
+    s_temperature_layer = text_layer_create(GRect(PADDING_X, -2, 80, temperature_row_height));
+    text_layer_set_font(s_temperature_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_background_color(s_temperature_layer, GColorClear);
+    text_layer_set_text_alignment(s_temperature_layer, GTextAlignmentLeft);
+    text_layer_set_text(s_temperature_layer, "--°");
+    layer_add_child(window_layer, text_layer_get_layer(s_temperature_layer));
+
+    // Weather icon sits to the right of the temperature.
+    s_weather_layer_icon = render_icon(window_layer, ICON_CLOUDY, PADDING_X, 0, false, false);
+    position_weather_icon();
+
+    // Weather condition under the temperature/icon.
+    s_condition_layer =
+        text_layer_create(GRect(PADDING_X, temperature_row_height, bounds.size.w - (PADDING_X * 2), 16));
+    text_layer_set_font(s_condition_layer, s_font_primary_small);
+    text_layer_set_background_color(s_condition_layer, GColorClear);
+    text_layer_set_text_alignment(s_condition_layer, GTextAlignmentLeft);
+    text_layer_set_text(s_condition_layer, "--");
+    layer_add_child(window_layer, text_layer_get_layer(s_condition_layer));
+}
+
+void render_top_right_data(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
     int row_height = 14;
 
     // Battery icon.
-    s_battery_layer_icon = render_icon(window_layer, ICON_BATTERY_50, PADDING, 0, true, false);
+    s_battery_layer_icon = render_icon(window_layer, ICON_BATTERY_50, PADDING_X, 0, true, false);
 
     // Battery percentage.
     GRect battery_icon_bounds = layer_get_bounds(text_layer_get_layer(s_battery_layer_icon));
-    s_battery_layer_text = text_layer_create(GRect(battery_icon_bounds.size.w - battery_icon_bounds.size.w, 0,
-                                                   bounds.size.w - battery_icon_bounds.size.w - 4, row_height));
+    s_battery_layer_text =
+        text_layer_create(GRect(battery_icon_bounds.size.w - battery_icon_bounds.size.w, 0,
+                                bounds.size.w - battery_icon_bounds.size.w - PADDING_X - 2, row_height));
 
     text_layer_set_text_alignment(s_battery_layer_text, GTextAlignmentRight);
-    text_layer_set_font(s_battery_layer_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_font(s_battery_layer_text, s_font_primary_small);
     text_layer_set_background_color(s_battery_layer_text, GColorClear);
     layer_add_child(window_layer, text_layer_get_layer(s_battery_layer_text));
     update_battery_icon_and_text(battery_state_service_peek());
 
 #if defined(PBL_HEALTH)
-    int steps_y = row_height + PADDING;
-    s_steps_layer_icon = render_icon(window_layer, ICON_STEPS, PADDING, steps_y, true, false);
+    int steps_y = row_height + 2;
+    s_steps_layer_icon = render_icon(window_layer, ICON_STEPS, PADDING_X, steps_y, true, false);
     GRect steps_icon_bounds = layer_get_bounds(text_layer_get_layer(s_steps_layer_icon));
 
     s_steps_layer_text = text_layer_create(GRect(steps_icon_bounds.size.w - steps_icon_bounds.size.w, steps_y,
-                                                 bounds.size.w - steps_icon_bounds.size.w - 4, row_height));
+                                                 bounds.size.w - steps_icon_bounds.size.w - PADDING_X - 2, row_height));
     text_layer_set_text_alignment(s_steps_layer_text, GTextAlignmentRight);
-    text_layer_set_font(s_steps_layer_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_font(s_steps_layer_text, s_font_primary_small);
     text_layer_set_background_color(s_steps_layer_text, GColorClear);
     layer_add_child(window_layer, text_layer_get_layer(s_steps_layer_text));
 #endif
-
-    // Weather icon.
-    s_weather_layer_icon = render_icon(window_layer, ICON_CLOUDY, PADDING, 0, false, false);
 }
 
-void load_time(Window *window) {
+void render_time(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
@@ -217,7 +312,8 @@ void load_time(Window *window) {
     text_layer_set_font(s_time_layer, s_font_primary_bold);
 
     // For debugging only.
-    text_layer_set_background_color(s_time_layer, GColorDarkGray);
+    text_layer_set_background_color(s_time_layer, GColorBlack);
+    text_layer_set_text_color(s_time_layer, GColorWhite);
 
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     update_time();
@@ -225,19 +321,18 @@ void load_time(Window *window) {
     layer_add_child(window_layer, s_time_layer_container);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
 
-    // Time in footer.
+    // Date in footer.
     int footer_height = 20;
-    s_date_layer =
-        text_layer_create(GRect(PADDING, bounds.size.h - footer_height - PADDING, bounds.size.w, footer_height));
-    text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    s_date_layer = text_layer_create(GRect(PADDING_X, bounds.size.h - footer_height, bounds.size.w, footer_height));
+    text_layer_set_font(s_date_layer, s_font_primary_small);
     text_layer_set_background_color(s_date_layer, GColorClear);
     text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 
     // Day of the week.
     s_day_layer = text_layer_create(
-        GRect(bounds.size.w / 2, bounds.size.h - footer_height - PADDING, bounds.size.w / 2 - PADDING, footer_height));
-    text_layer_set_font(s_day_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+        GRect(bounds.size.w / 2, bounds.size.h - footer_height, bounds.size.w / 2 - PADDING_X, footer_height));
+    text_layer_set_font(s_day_layer, s_font_primary_small);
     text_layer_set_background_color(s_day_layer, GColorClear);
     text_layer_set_text_alignment(s_day_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
@@ -245,12 +340,12 @@ void load_time(Window *window) {
     // UTC time (above footer).
     int utc_height = 18;
     int utc_y = bounds.size.h - footer_height - utc_height + 2; // Space above date/day footer.
-    s_utc_icon_layer = render_icon(window_layer, ICON_UTC, PADDING, utc_y, false, false);
+    s_utc_icon_layer = render_icon(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
     GRect utc_icon_bounds = layer_get_bounds(text_layer_get_layer(s_utc_icon_layer));
 
-    s_utc_layer = text_layer_create(GRect(PADDING + utc_icon_bounds.size.w + PADDING, utc_y - 3,
-                                          bounds.size.w - utc_icon_bounds.size.w - (PADDING * 2), utc_height));
-    text_layer_set_font(s_utc_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    s_utc_layer = text_layer_create(GRect(PADDING_X + utc_icon_bounds.size.w + PADDING_X, utc_y,
+                                          bounds.size.w - utc_icon_bounds.size.w - (PADDING_X * 2), utc_height));
+    text_layer_set_font(s_utc_layer, s_font_primary_small);
     text_layer_set_background_color(s_utc_layer, GColorClear);
     text_layer_set_text_alignment(s_utc_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(s_utc_layer));
@@ -262,8 +357,9 @@ void load_time(Window *window) {
 static void window_load(Window *window) {
     // Load UI things.
     load_fonts();
-    load_top_bar(window);
-    load_time(window);
+    render_weather(window);
+    render_top_right_data(window);
+    render_time(window);
 
     // Subscribe to changes.
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
@@ -272,6 +368,17 @@ static void window_load(Window *window) {
     health_service_events_subscribe(health_handler, NULL);
     update_steps();
 #endif
+
+    // Register JS callbacks.
+    app_message_register_inbox_received(inbox_received_callback);
+    app_message_register_inbox_dropped(inbox_dropped_callback);
+    app_message_register_outbox_failed(outbox_failed_callback);
+    app_message_register_outbox_sent(outbox_sent_callback);
+
+    // Open AppMessage.
+    const int inbox_size = 256;
+    const int outbox_size = 256;
+    app_message_open(inbox_size, outbox_size);
 }
 
 static void window_unload(Window *window) {
@@ -282,6 +389,8 @@ static void window_unload(Window *window) {
     text_layer_destroy(s_steps_layer_icon);
     text_layer_destroy(s_steps_layer_text);
 #endif
+    text_layer_destroy(s_condition_layer);
+    text_layer_destroy(s_temperature_layer);
     text_layer_destroy(s_weather_layer_icon);
     text_layer_destroy(s_utc_icon_layer);
     text_layer_destroy(s_utc_layer);
