@@ -56,7 +56,14 @@
         {
           "type": "font",
           "name": "FONT_TERMINUS_MONO_48",
-          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "characterRegex": "[0-9:]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_DSEG_42",
+          "file": "fonts/DSEG/DSEG7-Classic-MINI/DSEG7ClassicMini-Bold.ttf",
+          "characterRegex": "[0-9:]"
         }
       ]
     }

@@ -4,7 +4,7 @@ function weatherCodeToText(code) {
     case 0:
       return "Clear Sky";
     case 1:
-      return "Mostly Clear";
+      return "Mainly Clear";
     case 2:
       return "Partly Cloudy";
     case 3:
@@ -145,16 +145,15 @@ function locationError(err) {
 
 function getWeather() {
   navigator.geolocation.getCurrentPosition(locationSuccess, locationError, {
+    enableHighAccuracy: true,
     timeout: 15000,
-    maximumAge: 60000
+    maximumAge: 0 // Force GPS instead of cached wifi location.
   });
 }
 
 // Listen for when the watchface is opened
 Pebble.addEventListener("ready", function (e) {
   console.log("PebbleKit JS ready!");
-
-  getWeather();
 });
 
 // Listen for when an AppMessage is received
