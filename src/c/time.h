@@ -82,7 +82,7 @@ static void time_load(Window *window) {
     // Main time display.
     int time_height = 42;
     s_time_layer = text_layer_create(GRect(0, (TIME_CONTAINER_HEIGHT - time_height) / 2, bounds.size.w, time_height));
-    text_layer_set_font(s_time_layer, s_font_primary_bold);
+    text_layer_set_font(s_time_layer, s_font_time_large);
     text_layer_set_text_color(s_time_layer, THEME.text_color_secondary);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
@@ -108,7 +108,7 @@ static void time_load(Window *window) {
     // UTC time (above footer).
     int utc_height = 18;
     int utc_y = bounds.size.h - footer_height - utc_height + 2; // Space above date/day footer.
-    s_utc_icon_layer = font_render_icon(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
+    s_utc_icon_layer = font_render_icon_small(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
     text_layer_set_text_color(s_utc_icon_layer, THEME.text_color);
     GRect utc_icon_bounds = layer_get_bounds(text_layer_get_layer(s_utc_icon_layer));
 

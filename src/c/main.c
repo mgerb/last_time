@@ -68,7 +68,7 @@ void render_top_right_data(Window *window) {
     int row_height = 14;
 
     // Battery icon.
-    s_battery_layer_icon = font_render_icon(window_layer, ICON_BATTERY_50, PADDING_X, 0, true, false);
+    s_battery_layer_icon = font_render_icon_small(window_layer, ICON_BATTERY_50, PADDING_X, 0, true, false);
     text_layer_set_text_color(s_battery_layer_icon, THEME.text_color);
 
     // Battery percentage.
@@ -86,7 +86,7 @@ void render_top_right_data(Window *window) {
 
 #if defined(PBL_HEALTH)
     int steps_y = row_height + 2;
-    s_steps_layer_icon = font_render_icon(window_layer, ICON_STEPS, PADDING_X, steps_y, true, false);
+    s_steps_layer_icon = font_render_icon_small(window_layer, ICON_STEPS, PADDING_X, steps_y, true, false);
     text_layer_set_text_color(s_steps_layer_icon, THEME.text_color);
     GRect steps_icon_bounds = layer_get_bounds(text_layer_get_layer(s_steps_layer_icon));
 

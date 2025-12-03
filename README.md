@@ -1,12 +1,9 @@
 # TODO:
 
 - Weather
-  - Fetch location/weather
-  - Show relevant icon
-  - Show weather conditions as text below
-  - Display at top left
-  - Temp - top left
-  - Icon - right of temp
+  - Fetch location/weather (DONE)
+  - Show relevant icon (DONE)
+  - Show weather conditions as text below (DONE)
   - High/low - right of icon
 - Steps (DONE)
   - Show icon/step number (DONE)
@@ -16,4 +13,5 @@
 - Dark/Light modes
 - Bluetooth connect/disconnect icons
 - Sunrise/sunset
+  - Show day/night modes of weather icons
 - Moonphase

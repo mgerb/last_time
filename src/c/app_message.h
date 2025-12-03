@@ -5,8 +5,8 @@
 
 static void am_inbox_received_callback(DictionaryIterator *iterator, void *context) {
     weather_inbox_received_callback(iterator, context);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox received - temperature %s, weather_condition: %s", temperature_buffer,
-            condition_buffer);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox received - temperature %s, weather_condition: %s", s_temperature_buffer,
+            s_condition_buffer);
 }
 
 static void am_inbox_dropped_callback(AppMessageResult reason, void *context) {

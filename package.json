@@ -33,6 +33,7 @@
       "temperature_f",
       "temperature_c",
       "condition",
+      "weather_code",
       "high_f",
       "high_c",
       "low_f",
@@ -46,7 +47,19 @@
           "type": "font",
           "name": "FONT_ICONS_28",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[ -~\\uE21D]"
+          "characterRegex": "[\\uE21D]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_ICONS_36",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[\\uE21D]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_ICONS_48",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[\\uE21D]"
         },
         {
           "type": "font",
@@ -55,8 +68,13 @@
         },
         {
           "type": "font",
-          "name": "FONT_TERMINUS_MONO_48",
-          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "name": "FONT_TERMINUS_MONO_20",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_DSEG_12",
+          "file": "fonts/DSEG/DSEG7-Classic-MINI/DSEG7ClassicMini-Regular.ttf",
           "characterRegex": "[0-9:]"
         },
         {

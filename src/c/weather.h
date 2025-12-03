@@ -12,8 +12,9 @@ static TextLayer *s_weather_layer_icon;
 static TextLayer *s_condition_layer;
 static TextLayer *s_temperature_layer;
 
-static char temperature_buffer[8] = "--";
-static char condition_buffer[20] = "--";
+static char s_temperature_buffer[8] = "--";
+static char s_condition_buffer[20] = "--";
+static int32_t s_weather_code = 0;
 
 static const int WEATHER_GAP = 2;
 
@@ -21,6 +22,7 @@ typedef struct {
     int32_t temperature_f;
     char condition[WEATHER_CACHE_CONDITION_LEN];
     time_t timestamp;
+    int32_t weather_code;
 } WeatherCache;
 
 static bool s_weather_request_in_progress = false;
@@ -39,8 +41,12 @@ static bool weather_cache_is_valid(const WeatherCache *cache) {
     return difftime(now, cache->timestamp) < WEATHER_CACHE_TTL_SECONDS;
 }
 
-static void weather_cache_save(int32_t temperature_f, const char *condition) {
-    WeatherCache cache = {.temperature_f = temperature_f, .timestamp = time(NULL)};
+static void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code) {
+    WeatherCache cache = {
+        .temperature_f = temperature_f,
+        .timestamp = time(NULL),
+        .weather_code = weather_code,
+    };
     snprintf(cache.condition, sizeof(cache.condition), "%s", condition);
     persist_write_data(WEATHER_CACHE_KEY, &cache, sizeof(cache));
 }
@@ -54,8 +60,9 @@ static bool weather_load_and_apply_cache(void) {
         return false;
     }
 
-    snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°", (int)cache.temperature_f);
-    snprintf(condition_buffer, sizeof(condition_buffer), "%s", cache.condition);
+    snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)cache.temperature_f);
+    snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", cache.condition);
+    s_weather_code = cache.weather_code;
     return true;
 }
 
@@ -96,7 +103,58 @@ static void weather_request_if_needed(void) {
     }
 }
 
-void position_weather_icon(void) {
+// TODO:
+static bool weather_is_night() {
+    return false;
+}
+
+// NOTE: See weatherCodeToText in index.js for descriptions.
+static char *weather_get_condition_icon() {
+    switch (s_weather_code) {
+    case 0:
+    case 1: // Clear.
+        return weather_is_night() ? "" : "";
+    case 2:
+    case 3: // Overcast.
+        return weather_is_night() ? "" : "";
+    case 45:
+    case 48: // Fog.
+        return weather_is_night() ? "" : "";
+    case 51:
+    case 53:
+    case 55:
+    case 61:
+    case 63:
+    case 65:
+    case 80:
+    case 81:
+    case 82: // Rain.
+        return weather_is_night() ? "" : "";
+    case 56:
+    case 57:
+    case 66:
+    case 67: // Rain/snow mix.
+        return weather_is_night() ? "" : "";
+    case 71:
+    case 73:
+    case 75:
+    case 77:
+    case 85:
+    case 86:
+        return weather_is_night() ? "" : "";
+    case 95: // Thunderstorm.
+        return weather_is_night() ? "" : "";
+    case 96:
+    case 97:
+    case 98:
+    case 99: // Hail storm.
+        return weather_is_night() ? "" : "";
+    default: // Clear (should never occur).
+        return weather_is_night() ? "" : "";
+    }
+}
+
+static void weather_position_icon(void) {
     if (!s_weather_layer_icon || !s_temperature_layer) {
         return;
     }
@@ -115,6 +173,7 @@ void position_weather_icon(void) {
 static void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
     Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_temperature_f);
     Tuple *condition_tuple = dict_find(iterator, MESSAGE_KEY_condition);
+    Tuple *weather_code_tuple = dict_find(iterator, MESSAGE_KEY_weather_code);
 
     if (!temp_tuple || !condition_tuple) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
@@ -122,13 +181,15 @@ static void weather_inbox_received_callback(DictionaryIterator *iterator, void *
         return;
     }
 
-    snprintf(temperature_buffer, sizeof(temperature_buffer), "%d°", (int)temp_tuple->value->int32);
-    snprintf(condition_buffer, sizeof(condition_buffer), "%s", condition_tuple->value->cstring);
-    text_layer_set_text(s_temperature_layer, temperature_buffer);
-    text_layer_set_text(s_condition_layer, condition_buffer);
-    position_weather_icon();
+    snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)temp_tuple->value->int32);
+    snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", condition_tuple->value->cstring);
+    s_weather_code = weather_code_tuple->value->int32;
 
-    weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring);
+    text_layer_set_text(s_temperature_layer, s_temperature_buffer);
+    text_layer_set_text(s_condition_layer, s_condition_buffer);
+    weather_position_icon();
+
+    weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, weather_code_tuple->value->int32);
     s_weather_request_in_progress = false;
 }
 
@@ -140,28 +201,29 @@ static void weather_load(Window *window) {
     int conditions_row_height = 16;
 
     // Temperature text (top-left).
-    s_temperature_layer = text_layer_create(GRect(PADDING_X, 0, 80, temperature_row_height));
-    text_layer_set_font(s_temperature_layer, s_font_primary_small);
+    s_temperature_layer = text_layer_create(GRect(PADDING_X, 6, 80, temperature_row_height));
+    text_layer_set_font(s_temperature_layer, s_font_primary_medium);
     text_layer_set_text_color(s_temperature_layer, THEME.text_color);
     text_layer_set_background_color(s_temperature_layer, GColorClear);
     text_layer_set_text_alignment(s_temperature_layer, GTextAlignmentLeft);
-    text_layer_set_text(s_temperature_layer, temperature_buffer);
+    text_layer_set_text(s_temperature_layer, s_temperature_buffer);
     layer_add_child(window_layer, text_layer_get_layer(s_temperature_layer));
 
     // Weather icon sits to the right of the temperature.
-    s_weather_layer_icon = font_render_icon(window_layer, ICON_CLOUDY, PADDING_X, 0, false, false);
+    s_weather_layer_icon =
+        font_render_icon_large(window_layer, weather_get_condition_icon(), PADDING_X, -3, false, false);
     text_layer_set_text_color(s_weather_layer_icon, THEME.text_color);
-    position_weather_icon();
+    weather_position_icon();
 
     // Weather condition under the temperature/icon.
-    s_condition_layer =
-        text_layer_create(GRect(PADDING_X, (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - conditions_row_height - 2,
-                                bounds.size.w, conditions_row_height));
+    s_condition_layer = text_layer_create(
+        GRect(PADDING_X, (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - conditions_row_height - 4, bounds.size.w,
+              conditions_row_height));
     text_layer_set_font(s_condition_layer, s_font_primary_small);
     text_layer_set_text_color(s_condition_layer, THEME.text_color);
     text_layer_set_background_color(s_condition_layer, GColorClear);
     text_layer_set_text_alignment(s_condition_layer, GTextAlignmentLeft);
-    text_layer_set_text(s_condition_layer, condition_buffer);
+    text_layer_set_text(s_condition_layer, s_condition_buffer);
     layer_add_child(window_layer, text_layer_get_layer(s_condition_layer));
 }
 

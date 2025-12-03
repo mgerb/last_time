@@ -100,8 +100,8 @@ function locationSuccess(pos) {
 
       var temperature_f = Math.round(data.current.temperature_2m);
       var temperature_c = Math.round(((temperature_f - 32) * 5) / 9);
-      var code = data.current.weather_code;
-      var condition = weatherCodeToText(code);
+      var weather_code = data.current.weather_code;
+      var condition = weatherCodeToText(weather_code);
       var high_f = Math.round(data.daily.temperature_2m_max[0]);
       var high_c = Math.round(
         ((data.daily.temperature_2m_max[0] - 32) * 5) / 9
@@ -115,6 +115,7 @@ function locationSuccess(pos) {
         temperature_f,
         temperature_c,
         condition,
+        weather_code,
         high_f,
         high_c,
         low_f,
