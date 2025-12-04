@@ -1,3 +1,5 @@
+const suncalc = require("./suncalc");
+
 // Values mostly grabbed from here: https://github.com/open-meteo/open-meteo/issues/789
 function weatherCodeToText(code) {
   switch (code) {
@@ -84,7 +86,7 @@ function getWeatherFromLocation(lat, lon, callback) {
     lat +
     "&longitude=" +
     lon +
-    "&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset" +
+    "&daily=temperature_2m_max,temperature_2m_min" +
     "&current=temperature_2m,weather_code&temperature_unit=" +
     unit;
 
@@ -99,31 +101,21 @@ function locationSuccess(pos) {
       var data = JSON.parse(resp);
 
       var temperature_f = Math.round(data.current.temperature_2m);
-      var temperature_c = Math.round(((temperature_f - 32) * 5) / 9);
       var weather_code = data.current.weather_code;
       var condition = weatherCodeToText(weather_code);
       var high_f = Math.round(data.daily.temperature_2m_max[0]);
-      var high_c = Math.round(
-        ((data.daily.temperature_2m_max[0] - 32) * 5) / 9
-      );
       var low_f = Math.round(data.daily.temperature_2m_min[0]);
-      var low_c = Math.round(((data.daily.temperature_2m_min[0] - 32) * 5) / 9);
-      var sunrise = data.daily.sunrise[0];
-      var sunset = data.daily.sunset[0];
+
+      const suncalcTimes = suncalc.getTimes(new Date(), latitude, longitude);
 
       var weatherData = {
         temperature_f,
-        temperature_c,
         condition,
         weather_code,
         high_f,
-        high_c,
         low_f,
-        low_c,
-        latitude,
-        longitude,
-        sunrise,
-        sunset
+        sunrise: Math.floor(new Date(suncalcTimes.sunrise).getTime() / 1000),
+        sunset: Math.floor(new Date(suncalcTimes.sunset).getTime() / 1000)
       };
 
       console.log("weatherData", JSON.stringify(weatherData));

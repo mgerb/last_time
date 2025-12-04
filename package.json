@@ -31,13 +31,10 @@
       "latitude",
       "longitude",
       "temperature_f",
-      "temperature_c",
       "condition",
       "weather_code",
       "high_f",
-      "high_c",
       "low_f",
-      "low_c",
       "sunrise",
       "sunset"
     ],

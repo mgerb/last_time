@@ -2,7 +2,6 @@
 #include "common.h"
 #include "font.h"
 #include "pebble.h"
-#include "time.h"
 #include "weather.h"
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -12,6 +11,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     time_update_utc();
 
     weather_request_if_needed();
+    weather_update_condition_icon();
 }
 
 /**
