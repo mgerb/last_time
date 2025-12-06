@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "font.h"
+#include "pebble.h"
 #include "time.h"
 
 #define WEATHER_CACHE_KEY 1
@@ -114,8 +115,10 @@ static void weather_request_if_needed(void) {
 
 static bool weather_is_night() {
     time_t now = time(NULL);
-
-    return now < s_sunrise && s_sunrise < s_sunset;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "now: %d, sunrise: %d, sunset: %d", (int)now, (int)s_sunrise, (int)s_sunset);
+    // We only show sunrise/sunset times in the future, so it
+    // should always be night when the next sunrise is before the next sunset.
+    return s_sunrise < s_sunset;
 }
 
 // NOTE: See weatherCodeToText in index.js for descriptions.

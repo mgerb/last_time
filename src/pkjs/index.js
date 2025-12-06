@@ -106,7 +106,27 @@ function locationSuccess(pos) {
       var high_f = Math.round(data.daily.temperature_2m_max[0]);
       var low_f = Math.round(data.daily.temperature_2m_min[0]);
 
-      const suncalcTimes = suncalc.getTimes(new Date(), latitude, longitude);
+      // We only show solar times in the future so that is why
+      // we get today and tomorrow's sunrise/sunset. If 'now' is past
+      // sunrise, we show tomorrow's sunrise time. Same with sunset.
+      var now = new Date();
+      var suncalcTimesToday = suncalc.getTimes(now, latitude, longitude);
+
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      var suncalcTimesTomorrow = suncalc.getTimes(
+        tomorrow,
+        latitude,
+        longitude
+      );
+
+      var sunriseToday = new Date(suncalcTimesToday.sunrise);
+      var sunsetToday = new Date(suncalcTimesToday.sunset);
+      var sunriseTomorrow = new Date(suncalcTimesTomorrow.sunrise);
+      var sunsetTomorrow = new Date(suncalcTimesTomorrow.sunset);
+
+      var nextSunrise = now < sunriseToday ? sunriseToday : sunriseTomorrow;
+      var nextSunset = now < sunsetToday ? sunsetToday : sunsetTomorrow;
 
       var weatherData = {
         temperature_f,
@@ -114,11 +134,12 @@ function locationSuccess(pos) {
         weather_code,
         high_f,
         low_f,
-        sunrise: Math.floor(new Date(suncalcTimes.sunrise).getTime() / 1000),
-        sunset: Math.floor(new Date(suncalcTimes.sunset).getTime() / 1000)
+        sunrise: Math.floor(nextSunrise.getTime() / 1000),
+        sunset: Math.floor(nextSunset.getTime() / 1000)
       };
 
-      console.log("weatherData", JSON.stringify(weatherData));
+      console.log("weatherData:", JSON.stringify(weatherData));
+
       Pebble.sendAppMessage(
         weatherData,
         function (e) {
