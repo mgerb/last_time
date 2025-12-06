@@ -1,3 +1,5 @@
+const suncalc = require("./suncalc");
+
 // Values mostly grabbed from here: https://github.com/open-meteo/open-meteo/issues/789
 function weatherCodeToText(code) {
   switch (code) {
@@ -84,7 +86,7 @@ function getWeatherFromLocation(lat, lon, callback) {
     lat +
     "&longitude=" +
     lon +
-    "&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset" +
+    "&daily=temperature_2m_max,temperature_2m_min" +
     "&current=temperature_2m,weather_code&temperature_unit=" +
     unit;
 
@@ -99,34 +101,45 @@ function locationSuccess(pos) {
       var data = JSON.parse(resp);
 
       var temperature_f = Math.round(data.current.temperature_2m);
-      var temperature_c = Math.round(((temperature_f - 32) * 5) / 9);
       var weather_code = data.current.weather_code;
       var condition = weatherCodeToText(weather_code);
       var high_f = Math.round(data.daily.temperature_2m_max[0]);
-      var high_c = Math.round(
-        ((data.daily.temperature_2m_max[0] - 32) * 5) / 9
-      );
       var low_f = Math.round(data.daily.temperature_2m_min[0]);
-      var low_c = Math.round(((data.daily.temperature_2m_min[0] - 32) * 5) / 9);
-      var sunrise = data.daily.sunrise[0];
-      var sunset = data.daily.sunset[0];
+
+      // We only show solar times in the future so that is why
+      // we get today and tomorrow's sunrise/sunset. If 'now' is past
+      // sunrise, we show tomorrow's sunrise time. Same with sunset.
+      var now = new Date();
+      var suncalcTimesToday = suncalc.getTimes(now, latitude, longitude);
+
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      var suncalcTimesTomorrow = suncalc.getTimes(
+        tomorrow,
+        latitude,
+        longitude
+      );
+
+      var sunriseToday = new Date(suncalcTimesToday.sunrise);
+      var sunsetToday = new Date(suncalcTimesToday.sunset);
+      var sunriseTomorrow = new Date(suncalcTimesTomorrow.sunrise);
+      var sunsetTomorrow = new Date(suncalcTimesTomorrow.sunset);
+
+      var nextSunrise = now < sunriseToday ? sunriseToday : sunriseTomorrow;
+      var nextSunset = now < sunsetToday ? sunsetToday : sunsetTomorrow;
 
       var weatherData = {
         temperature_f,
-        temperature_c,
         condition,
         weather_code,
         high_f,
-        high_c,
         low_f,
-        low_c,
-        latitude,
-        longitude,
-        sunrise,
-        sunset
+        sunrise: Math.floor(nextSunrise.getTime() / 1000),
+        sunset: Math.floor(nextSunset.getTime() / 1000)
       };
 
-      console.log("weatherData", JSON.stringify(weatherData));
+      console.log("weatherData:", JSON.stringify(weatherData));
+
       Pebble.sendAppMessage(
         weatherData,
         function (e) {

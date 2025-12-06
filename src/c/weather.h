@@ -2,10 +2,11 @@
 
 #include "common.h"
 #include "font.h"
+#include "pebble.h"
 #include "time.h"
 
 #define WEATHER_CACHE_KEY 1
-#define WEATHER_CACHE_TTL_SECONDS (30 * 60)
+#define WEATHER_CACHE_TTL_SECONDS (15 * 60) // 15 minutes
 #define WEATHER_CACHE_CONDITION_LEN 20
 
 static TextLayer *s_weather_layer_icon;
@@ -14,7 +15,9 @@ static TextLayer *s_temperature_layer;
 
 static char s_temperature_buffer[8] = "--";
 static char s_condition_buffer[20] = "--";
-static int32_t s_weather_code = 0;
+static int32_t s_weather_code = -1;
+static int32_t s_sunrise = 0;
+static int32_t s_sunset = 0;
 
 static const int WEATHER_GAP = 2;
 
@@ -23,6 +26,8 @@ typedef struct {
     char condition[WEATHER_CACHE_CONDITION_LEN];
     time_t timestamp;
     int32_t weather_code;
+    int32_t sunrise;
+    int32_t sunset;
 } WeatherCache;
 
 static bool s_weather_request_in_progress = false;
@@ -41,11 +46,14 @@ static bool weather_cache_is_valid(const WeatherCache *cache) {
     return difftime(now, cache->timestamp) < WEATHER_CACHE_TTL_SECONDS;
 }
 
-static void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code) {
+static void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code, int32_t sunrise,
+                               int32_t sunset) {
     WeatherCache cache = {
         .temperature_f = temperature_f,
         .timestamp = time(NULL),
         .weather_code = weather_code,
+        .sunrise = sunrise,
+        .sunset = sunset,
     };
     snprintf(cache.condition, sizeof(cache.condition), "%s", condition);
     persist_write_data(WEATHER_CACHE_KEY, &cache, sizeof(cache));
@@ -63,6 +71,8 @@ static bool weather_load_and_apply_cache(void) {
     snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)cache.temperature_f);
     snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", cache.condition);
     s_weather_code = cache.weather_code;
+    s_sunrise = cache.sunrise;
+    s_sunset = cache.sunset;
     return true;
 }
 
@@ -103,9 +113,12 @@ static void weather_request_if_needed(void) {
     }
 }
 
-// TODO:
 static bool weather_is_night() {
-    return false;
+    time_t now = time(NULL);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "now: %d, sunrise: %d, sunset: %d", (int)now, (int)s_sunrise, (int)s_sunset);
+    // We only show sunrise/sunset times in the future, so it
+    // should always be night when the next sunrise is before the next sunset.
+    return s_sunrise < s_sunset;
 }
 
 // NOTE: See weatherCodeToText in index.js for descriptions.
@@ -154,6 +167,10 @@ static char *weather_get_condition_icon() {
     }
 }
 
+static void weather_update_condition_icon() {
+    text_layer_set_text(s_weather_layer_icon, weather_get_condition_icon());
+}
+
 static void weather_position_icon(void) {
     if (!s_weather_layer_icon || !s_temperature_layer) {
         return;
@@ -174,8 +191,10 @@ static void weather_inbox_received_callback(DictionaryIterator *iterator, void *
     Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_temperature_f);
     Tuple *condition_tuple = dict_find(iterator, MESSAGE_KEY_condition);
     Tuple *weather_code_tuple = dict_find(iterator, MESSAGE_KEY_weather_code);
+    Tuple *sunrise_tuple = dict_find(iterator, MESSAGE_KEY_sunrise);
+    Tuple *sunset_tuple = dict_find(iterator, MESSAGE_KEY_sunset);
 
-    if (!temp_tuple || !condition_tuple) {
+    if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
                 condition_tuple);
         return;
@@ -184,12 +203,15 @@ static void weather_inbox_received_callback(DictionaryIterator *iterator, void *
     snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)temp_tuple->value->int32);
     snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", condition_tuple->value->cstring);
     s_weather_code = weather_code_tuple->value->int32;
+    s_sunrise = sunrise_tuple->value->int32;
+    s_sunset = sunset_tuple->value->int32;
 
     text_layer_set_text(s_temperature_layer, s_temperature_buffer);
     text_layer_set_text(s_condition_layer, s_condition_buffer);
+    weather_update_condition_icon();
     weather_position_icon();
 
-    weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, weather_code_tuple->value->int32);
+    weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, s_sunrise, s_sunset);
     s_weather_request_in_progress = false;
 }
 

@@ -13,5 +13,5 @@
 - Dark/Light modes
 - Bluetooth connect/disconnect icons
 - Sunrise/sunset
-  - Show day/night modes of weather icons
+  - Show day/night modes of weather icons (DONE)
 - Moonphase
