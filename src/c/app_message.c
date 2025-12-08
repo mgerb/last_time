@@ -3,7 +3,7 @@
 
 static void am_inbox_received_callback(DictionaryIterator *iterator, void *context) {
     weather_inbox_received_callback(iterator, context);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "inbox received");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox received");
 }
 
 static void am_inbox_dropped_callback(AppMessageResult reason, void *context) {

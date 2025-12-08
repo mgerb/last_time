@@ -6,6 +6,7 @@ GFont s_font_primary_medium;
 GFont s_font_time_small;
 GFont s_font_time_large;
 
+GFont s_font_icons_xsmall;
 GFont s_font_icons_small;
 GFont s_font_icons_medium;
 GFont s_font_icons_large;
@@ -17,6 +18,8 @@ const char *ICON_BATTERY_75 = "";
 const char *ICON_BATTERY_100 = "";
 const char *ICON_STEPS = "";
 const char *ICON_UTC = "";
+const char *ICON_BLUETOOTH_CONNECTED = "󰂯";
+const char *ICON_BLUETOOTH_DISCONNECTED = "󰂲";
 
 static TextLayer *font_render_icon(Layer *container_layer, GFont font, const char *text, int x, int y,
                                    bool x_offset_right, bool y_offset_bottom) {
@@ -57,6 +60,7 @@ void font_load(void) {
 
     // Nerd font icons. See fonts in package.json. Using Lilex nerd fonts because
     // icons just did not render right with other nerd fonts for some reason.
+    s_font_icons_xsmall = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_21));
     s_font_icons_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_28));
     s_font_icons_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_36));
     s_font_icons_large = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_48));
@@ -72,9 +76,15 @@ void font_unload(void) {
     fonts_unload_custom_font(s_font_time_large);
 
     // Icons.
+    fonts_unload_custom_font(s_font_icons_xsmall);
     fonts_unload_custom_font(s_font_icons_small);
     fonts_unload_custom_font(s_font_icons_medium);
     fonts_unload_custom_font(s_font_icons_large);
+}
+
+TextLayer *font_render_icon_xsmall(Layer *container_layer, const char *text, int x, int y, bool x_offset_right,
+                                   bool y_offset_bottom) {
+    return font_render_icon(container_layer, s_font_icons_xsmall, text, x, y, x_offset_right, y_offset_bottom);
 }
 
 TextLayer *font_render_icon_small(Layer *container_layer, const char *text, int x, int y, bool x_offset_right,

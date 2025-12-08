@@ -53,3 +53,7 @@ void health_unload() {
     text_layer_destroy(s_steps_layer_icon);
     text_layer_destroy(s_steps_layer_text);
 }
+
+void health_deinit() {
+    health_service_events_unsubscribe();
+}

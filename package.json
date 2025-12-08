@@ -43,21 +43,27 @@
       "media": [
         {
           "type": "font",
+          "name": "FONT_ICONS_21",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[󰂯󰂲]"
+        },
+        {
+          "type": "font",
           "name": "FONT_ICONS_28",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[\\uE21D]"
+          "characterRegex": "[󰂯󰂲]"
         },
         {
           "type": "font",
           "name": "FONT_ICONS_36",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[\\uE21D]"
+          "characterRegex": "[]"
         },
         {
           "type": "font",
           "name": "FONT_ICONS_48",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[\\uE21D]"
+          "characterRegex": "[]"
         },
         {
           "type": "font",

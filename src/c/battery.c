@@ -60,3 +60,7 @@ void battery_unload() {
     text_layer_destroy(s_battery_layer_text);
     text_layer_destroy(s_battery_layer_icon);
 }
+
+void battery_deinit() {
+    battery_state_service_unsubscribe();
+}

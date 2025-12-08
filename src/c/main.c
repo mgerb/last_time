@@ -1,5 +1,6 @@
 #include "app_message.h"
 #include "battery.h"
+#include "bluetooth.h"
 #include "common.h"
 #include "font.h"
 #include "pebble.h"
@@ -31,6 +32,7 @@ static void window_load(Window *window) {
     font_load();
     time_load(window);
     load_top_right(window);
+    bluetooth_load(window);
     weather_load(window);
     window_set_background_color(window, THEME.bg_color);
 }
@@ -38,6 +40,7 @@ static void window_load(Window *window) {
 static void window_unload(Window *window) {
     time_unload();
     weather_unload();
+    bluetooth_unload();
     battery_unload();
 #if defined(PBL_HEALTH)
     health_unload();
@@ -54,6 +57,7 @@ static void init(void) {
     // Subscribe to changes.
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
     battery_init();
+    bluetooth_init();
 #if defined(PBL_HEALTH)
     health_init();
 #endif
@@ -62,9 +66,10 @@ static void init(void) {
 }
 
 static void deinit(void) {
-    battery_state_service_unsubscribe();
+    bluetooth_deinit();
+    battery_deinit();
 #if defined(PBL_HEALTH)
-    health_service_events_unsubscribe();
+    health_deinit();
 #endif
     window_destroy(s_window);
 }
