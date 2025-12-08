@@ -4,10 +4,16 @@
 
 static TextLayer *s_time_layer;
 static Layer *s_time_layer_container;
+static TextLayer *s_sunrise_icon_layer;
+static TextLayer *s_sunrise_layer;
+static TextLayer *s_sunset_icon_layer;
+static TextLayer *s_sunset_layer;
 static TextLayer *s_utc_icon_layer;
 static TextLayer *s_utc_layer;
 static TextLayer *s_date_layer;
 static TextLayer *s_day_layer;
+static char s_sunrise_buffer[6] = "--:--";
+static char s_sunset_buffer[6] = "--:--";
 
 const int TIME_CONTAINER_HEIGHT = 56;
 
@@ -33,6 +39,38 @@ static void time_update_utc(void) {
     strftime(utc_buffer, sizeof(utc_buffer), "%H:%M", t);
 
     text_layer_set_text(s_utc_layer, utc_buffer);
+}
+
+void time_update_sunrise(time_t sunrise) {
+    if (!s_sunrise_layer) {
+        return;
+    }
+
+    if (sunrise == 0) {
+        snprintf(s_sunrise_buffer, sizeof(s_sunrise_buffer), "--:--");
+        text_layer_set_text(s_sunrise_layer, s_sunrise_buffer);
+        return;
+    }
+
+    struct tm *t = localtime(&sunrise);
+    strftime(s_sunrise_buffer, sizeof(s_sunrise_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", t);
+    text_layer_set_text(s_sunrise_layer, s_sunrise_buffer);
+}
+
+void time_update_sunset(time_t sunset) {
+    if (!s_sunset_layer) {
+        return;
+    }
+
+    if (sunset == 0) {
+        snprintf(s_sunset_buffer, sizeof(s_sunset_buffer), "--:--");
+        text_layer_set_text(s_sunset_layer, s_sunset_buffer);
+        return;
+    }
+
+    struct tm *t = localtime(&sunset);
+    strftime(s_sunset_buffer, sizeof(s_sunset_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", t);
+    text_layer_set_text(s_sunset_layer, s_sunset_buffer);
 }
 
 void time_update(void) {
@@ -105,9 +143,41 @@ void time_load(Window *window) {
     text_layer_set_text_alignment(s_day_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
 
-    // UTC time (above footer).
+    // Sunrise time (above UTC time).
     int utc_height = 18;
     int utc_y = bounds.size.h - footer_height - utc_height + 2; // Space above date/day footer.
+    int sunrise_height = 18;
+    int sunrise_y = utc_y - sunrise_height;
+    int sunset_height = 18;
+    int sunset_y = sunrise_y;
+
+    s_sunrise_icon_layer = font_render_icon_small(window_layer, ICON_SUNRISE, PADDING_X, sunrise_y, false, false);
+    text_layer_set_text_color(s_sunrise_icon_layer, THEME.text_color);
+    GRect sunrise_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunrise_icon_layer));
+
+    s_sunrise_layer =
+        text_layer_create(GRect(PADDING_X + sunrise_icon_bounds.size.w + PADDING_X, sunrise_y,
+                                bounds.size.w - sunrise_icon_bounds.size.w - (PADDING_X * 2), sunrise_height));
+    text_layer_set_font(s_sunrise_layer, s_font_primary_small);
+    text_layer_set_text_color(s_sunrise_layer, THEME.text_color);
+    text_layer_set_background_color(s_sunrise_layer, GColorClear);
+    text_layer_set_text_alignment(s_sunrise_layer, GTextAlignmentLeft);
+    layer_add_child(window_layer, text_layer_get_layer(s_sunrise_layer));
+
+    // Sunset time mirrored on the right.
+    s_sunset_icon_layer = font_render_icon_small(window_layer, ICON_SUNSET, PADDING_X, sunset_y, true, false);
+    text_layer_set_text_color(s_sunset_icon_layer, THEME.text_color);
+    GRect sunset_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunset_icon_layer));
+
+    int sunset_text_width = bounds.size.w - sunset_icon_bounds.size.w - (PADDING_X * 2) - 2;
+    s_sunset_layer = text_layer_create(GRect(PADDING_X, sunset_y, sunset_text_width, sunset_height));
+    text_layer_set_font(s_sunset_layer, s_font_primary_small);
+    text_layer_set_text_color(s_sunset_layer, THEME.text_color);
+    text_layer_set_background_color(s_sunset_layer, GColorClear);
+    text_layer_set_text_alignment(s_sunset_layer, GTextAlignmentRight);
+    layer_add_child(window_layer, text_layer_get_layer(s_sunset_layer));
+
+    // UTC time (above footer).
     s_utc_icon_layer = font_render_icon_small(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
     text_layer_set_text_color(s_utc_icon_layer, THEME.text_color);
     GRect utc_icon_bounds = layer_get_bounds(text_layer_get_layer(s_utc_icon_layer));
@@ -123,6 +193,8 @@ void time_load(Window *window) {
     time_update();
     time_update_date_and_day();
     time_update_utc();
+    time_update_sunrise(0);
+    time_update_sunset(0);
 }
 
 void time_unload(void) {
@@ -131,5 +203,9 @@ void time_unload(void) {
     text_layer_destroy(s_utc_layer);
     text_layer_destroy(s_date_layer);
     text_layer_destroy(s_day_layer);
+    text_layer_destroy(s_sunrise_icon_layer);
+    text_layer_destroy(s_sunrise_layer);
+    text_layer_destroy(s_sunset_icon_layer);
+    text_layer_destroy(s_sunset_layer);
     layer_destroy(s_time_layer_container);
 }

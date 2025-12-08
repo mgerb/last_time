@@ -20,6 +20,8 @@ const char *ICON_STEPS = "";
 const char *ICON_UTC = "";
 const char *ICON_BLUETOOTH_CONNECTED = "󰂯";
 const char *ICON_BLUETOOTH_DISCONNECTED = "󰂲";
+const char *ICON_SUNRISE = "";
+const char *ICON_SUNSET = "";
 
 static TextLayer *font_render_icon(Layer *container_layer, GFont font, const char *text, int x, int y,
                                    bool x_offset_right, bool y_offset_bottom) {

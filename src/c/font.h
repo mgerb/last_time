@@ -22,6 +22,8 @@ extern const char *ICON_STEPS;
 extern const char *ICON_UTC;
 extern const char *ICON_BLUETOOTH_CONNECTED;
 extern const char *ICON_BLUETOOTH_DISCONNECTED;
+extern const char *ICON_SUNRISE;
+extern const char *ICON_SUNSET;
 
 void font_load(void);
 void font_unload(void);

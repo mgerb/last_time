@@ -14,8 +14,8 @@ static TextLayer *s_temperature_layer;
 static char s_temperature_buffer[8] = "--";
 static char s_condition_buffer[20] = "--";
 static int32_t s_weather_code = -1;
-static int32_t s_sunrise = 0;
-static int32_t s_sunset = 0;
+int32_t weather_sunrise = 0;
+int32_t weather_sunset = 0;
 
 static const int WEATHER_GAP = 2;
 
@@ -84,8 +84,8 @@ bool weather_load_and_apply_cache(void) {
     snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)cache.temperature_f);
     snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", cache.condition);
     s_weather_code = cache.weather_code;
-    s_sunrise = cache.sunrise;
-    s_sunset = cache.sunset;
+    weather_sunrise = cache.sunrise;
+    weather_sunset = cache.sunset;
     return true;
 }
 
@@ -134,10 +134,11 @@ void weather_request_if_needed(void) {
 
 bool weather_is_night(void) {
     time_t now = time(NULL);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "now: %d, sunrise: %d, sunset: %d", (int)now, (int)s_sunrise, (int)s_sunset);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "now: %d, sunrise: %d, sunset: %d", (int)now, (int)weather_sunrise,
+            (int)weather_sunset);
     // We only show sunrise/sunset times in the future, so it
     // should always be night when the next sunrise is before the next sunset.
-    return s_sunrise < s_sunset;
+    return weather_sunrise < weather_sunset;
 }
 
 // NOTE: See weatherCodeToText in index.js for descriptions.
@@ -230,20 +231,25 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)temp_tuple->value->int32);
     snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", condition_tuple->value->cstring);
     s_weather_code = weather_code_tuple->value->int32;
-    s_sunrise = sunrise_tuple->value->int32;
-    s_sunset = sunset_tuple->value->int32;
+    weather_sunrise = sunrise_tuple->value->int32;
+    weather_sunset = sunset_tuple->value->int32;
+    time_update_sunrise((time_t)weather_sunrise);
+    time_update_sunset((time_t)weather_sunset);
 
     text_layer_set_text(s_temperature_layer, s_temperature_buffer);
     text_layer_set_text(s_condition_layer, s_condition_buffer);
     weather_update_condition_icon();
     weather_position_icon();
 
-    weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, s_sunrise, s_sunset);
+    weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, weather_sunrise,
+                       weather_sunset);
     weather_request_reset_state();
 }
 
 void weather_load(Window *window) {
     weather_load_and_apply_cache();
+    time_update_sunrise((time_t)weather_sunrise);
+    time_update_sunset((time_t)weather_sunset);
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
     int temperature_row_height = 24;
