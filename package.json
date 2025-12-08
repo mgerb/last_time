@@ -36,7 +36,8 @@
       "high_f",
       "low_f",
       "sunrise",
-      "sunset"
+      "sunset",
+      "error"
     ],
     "resources": {
       "media": [

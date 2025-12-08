@@ -10,12 +10,12 @@ static void am_inbox_received_callback(DictionaryIterator *iterator, void *conte
 
 static void am_inbox_dropped_callback(AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
-    s_weather_request_in_progress = false;
+    weather_request_reset_state();
 }
 
 static void am_outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
-    s_weather_request_in_progress = false;
+    weather_request_reset_state();
 }
 
 static void am_outbox_sent_callback(DictionaryIterator *iterator, void *context) {

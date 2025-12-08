@@ -8,6 +8,7 @@
 #define WEATHER_CACHE_KEY 1
 #define WEATHER_CACHE_TTL_SECONDS (15 * 60) // 15 minutes
 #define WEATHER_CACHE_CONDITION_LEN 20
+#define WEATHER_REQUEST_TIMEOUT_SECONDS 30
 
 static TextLayer *s_weather_layer_icon;
 static TextLayer *s_condition_layer;
@@ -31,6 +32,21 @@ typedef struct {
 } WeatherCache;
 
 static bool s_weather_request_in_progress = false;
+static time_t s_weather_request_started_at = 0;
+
+static void weather_request_reset_state(void) {
+    s_weather_request_in_progress = false;
+    s_weather_request_started_at = 0;
+}
+
+static bool weather_request_has_timed_out(void) {
+    if (!s_weather_request_in_progress || s_weather_request_started_at == 0) {
+        return false;
+    }
+
+    time_t now = time(NULL);
+    return difftime(now, s_weather_request_started_at) > WEATHER_REQUEST_TIMEOUT_SECONDS;
+}
 
 static bool weather_cache_load(WeatherCache *cache) {
     if (!persist_exists(WEATHER_CACHE_KEY)) {
@@ -85,26 +101,32 @@ static void weather_send_request(void) {
 
     if (result != APP_MSG_OK) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox begin failed: %d", (int)result);
-        s_weather_request_in_progress = false;
+        weather_request_reset_state();
         return;
     }
 
     dict_write_uint8(iter, 0, 0);
 
+    s_weather_request_started_at = time(NULL);
+    s_weather_request_in_progress = true;
+
     result = app_message_outbox_send();
     if (result != APP_MSG_OK) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed: %d", (int)result);
-        s_weather_request_in_progress = false;
+        weather_request_reset_state();
         return;
     }
-
-    s_weather_request_in_progress = true;
 }
 
 static void weather_request_if_needed(void) {
     WeatherCache cache;
     bool has_cache = weather_cache_load(&cache);
     bool cache_valid = has_cache && weather_cache_is_valid(&cache);
+
+    if (weather_request_has_timed_out()) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Weather request timed out. Resetting request state.");
+        weather_request_reset_state();
+    }
 
     APP_LOG(APP_LOG_LEVEL_DEBUG, "cache_valid: %d, s_weather_request_in_progress: %d", cache_valid,
             s_weather_request_in_progress);
@@ -115,7 +137,8 @@ static void weather_request_if_needed(void) {
 
 static bool weather_is_night() {
     time_t now = time(NULL);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "now: %d, sunrise: %d, sunset: %d", (int)now, (int)s_sunrise, (int)s_sunset);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "weather_is_night: %d, sunrise: %d, sunset: %d", (int)now, (int)s_sunrise,
+            (int)s_sunset);
     // We only show sunrise/sunset times in the future, so it
     // should always be night when the next sunrise is before the next sunset.
     return s_sunrise < s_sunset;
@@ -188,6 +211,13 @@ static void weather_position_icon(void) {
 }
 
 static void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
+    Tuple *error_tuple = dict_find(iterator, MESSAGE_KEY_error);
+    if (error_tuple) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "Weather request failed on phone: %ld", (long)error_tuple->value->int32);
+        weather_request_reset_state();
+        return;
+    }
+
     Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_temperature_f);
     Tuple *condition_tuple = dict_find(iterator, MESSAGE_KEY_condition);
     Tuple *weather_code_tuple = dict_find(iterator, MESSAGE_KEY_weather_code);
@@ -197,6 +227,7 @@ static void weather_inbox_received_callback(DictionaryIterator *iterator, void *
     if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
                 condition_tuple);
+        weather_request_reset_state();
         return;
     }
 
@@ -212,7 +243,7 @@ static void weather_inbox_received_callback(DictionaryIterator *iterator, void *
     weather_position_icon();
 
     weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, s_sunrise, s_sunset);
-    s_weather_request_in_progress = false;
+    weather_request_reset_state();
 }
 
 static void weather_load(Window *window) {
