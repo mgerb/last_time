@@ -2,13 +2,19 @@
 #include "common.h"
 #include "font.h"
 #include "pebble.h"
+#include "time.h"
 #include "weather.h"
+
+TextLayer *s_battery_layer_text;
+TextLayer *s_battery_layer_icon;
+#if defined(PBL_HEALTH)
+TextLayer *s_steps_layer_text;
+TextLayer *s_steps_layer_icon;
+#endif
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "tick handler...");
     time_update();
-    time_update_date_and_day();
-    time_update_utc();
 
     weather_request_if_needed();
     weather_update_condition_icon();
@@ -23,7 +29,7 @@ static void battery_update_handler(BatteryChargeState state) {
     text_layer_set_text(s_battery_layer_text, battery_buffer);
 
     // Pick icon based on charge percentage.
-    char *icon = ICON_BATTERY_100;
+    const char *icon = ICON_BATTERY_100;
     if (state.charge_percent <= 5) {
         icon = ICON_BATTERY_0;
     } else if (state.charge_percent <= 30) {
