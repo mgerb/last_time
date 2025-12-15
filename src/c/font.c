@@ -54,7 +54,7 @@ static TextLayer *font_render_icon(Layer *container_layer, GFont font, const cha
 
 void font_load(void) {
     s_font_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_14));
-    s_font_primary_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_20));
+    s_font_primary_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_24));
 
     // Time font.
     s_font_time_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DSEG_12));

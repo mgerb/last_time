@@ -1,9 +1,11 @@
 #include "time.h"
 #include "font.h"
 #include "gcolor_definitions.h"
+#include "pebble.h"
 
 static TextLayer *s_time_layer;
 static Layer *s_time_layer_container;
+static Layer *s_date_layer_container;
 static TextLayer *s_sunrise_icon_layer;
 static TextLayer *s_sunrise_layer;
 static TextLayer *s_sunset_icon_layer;
@@ -15,7 +17,7 @@ static TextLayer *s_day_layer;
 static char s_sunrise_buffer[6] = "--:--";
 static char s_sunset_buffer[6] = "--:--";
 
-const int TIME_CONTAINER_HEIGHT = 56;
+const int TIME_CONTAINER_HEIGHT = 50;
 
 static void time_update_date_and_day(void) {
     time_t now = time(NULL);
@@ -89,32 +91,65 @@ void time_update(void) {
     time_update_utc();
 }
 
-static void time_container_update_color(Layer *layer, GContext *ctx) {
+int border_radius = 4;
+
+static void time_layer_container_update(Layer *layer, GContext *ctx) {
     GRect bounds = layer_get_bounds(layer);
-    graphics_context_set_stroke_color(ctx, THEME.bg_color);
-    graphics_context_set_stroke_width(ctx, 2);
+    graphics_context_set_fill_color(ctx, THEME.bg_color_secondary);
+    graphics_fill_rect(ctx, layer_get_bounds(layer), border_radius, GCornerTopLeft | GCornerTopRight);
 
-    // Top border.
-    graphics_draw_line(ctx, GPoint(bounds.origin.x, bounds.origin.y),
-                       GPoint(bounds.origin.x + bounds.size.w - 1, bounds.origin.y));
-
-    // Bottom border.
+    // Border separating main time from the date below.
+    graphics_context_set_stroke_color(ctx, THEME.text_color_secondary);
+    graphics_context_set_stroke_width(ctx, 1);
     graphics_draw_line(ctx, GPoint(bounds.origin.x, bounds.origin.y + bounds.size.h - 1),
                        GPoint(bounds.origin.x + bounds.size.w - 1, bounds.origin.y + bounds.size.h - 1));
+}
+
+static void date_layer_container_update(Layer *layer, GContext *ctx) {
+    GRect bounds = layer_get_bounds(layer);
+    graphics_context_set_stroke_color(ctx, GColorWhite);
+    graphics_context_set_stroke_width(ctx, 2);
 
     // Fill.
+    // graphics_context_set_fill_color(ctx, GColorLightGray);
     graphics_context_set_fill_color(ctx, THEME.bg_color_secondary);
-    graphics_fill_rect(ctx, layer_get_bounds(layer), 4, GCornersAll);
+    graphics_fill_rect(ctx, layer_get_bounds(layer), border_radius, GCornersAll);
 }
 
 void time_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
+    // Lower container for date/day of week. Must be added before main time container.
+    // It is the same height as the main time container, just shifted down a bit.
+    int date_height = 18;
+    s_date_layer_container = layer_create(GRect(0, (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) + date_height,
+                                                bounds.size.w, TIME_CONTAINER_HEIGHT));
+    layer_set_update_proc(s_date_layer_container, date_layer_container_update);
+    layer_add_child(window_layer, s_date_layer_container);
+
+    // Date below main time display.
+    GRect s_date_layer_container_frame = layer_get_frame(s_date_layer_container);
+    int date_y = s_date_layer_container_frame.origin.y + s_date_layer_container_frame.size.h - date_height;
+    s_date_layer = text_layer_create(GRect(PADDING_X, date_y, bounds.size.w, date_height));
+    text_layer_set_font(s_date_layer, s_font_primary_small);
+    text_layer_set_text_color(s_date_layer, THEME.text_color_secondary);
+    text_layer_set_background_color(s_date_layer, GColorClear);
+    text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
+    layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
+
+    // Day of the week.
+    s_day_layer = text_layer_create(GRect(bounds.size.w / 2, date_y, bounds.size.w / 2 - PADDING_X, date_height));
+    text_layer_set_font(s_day_layer, s_font_primary_small);
+    text_layer_set_text_color(s_day_layer, THEME.text_color_secondary);
+    text_layer_set_background_color(s_day_layer, GColorClear);
+    text_layer_set_text_alignment(s_day_layer, GTextAlignmentRight);
+    layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
+
     // Main time container.
     s_time_layer_container =
         layer_create(GRect(0, (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2), bounds.size.w, TIME_CONTAINER_HEIGHT));
-    layer_set_update_proc(s_time_layer_container, time_container_update_color);
+    layer_set_update_proc(s_time_layer_container, time_layer_container_update);
     layer_add_child(window_layer, s_time_layer_container);
 
     // Main time display.
@@ -125,39 +160,18 @@ void time_load(Window *window) {
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
 
-    // Date in footer.
-    int footer_height = 20;
-    s_date_layer = text_layer_create(GRect(PADDING_X, bounds.size.h - footer_height, bounds.size.w, footer_height));
-    text_layer_set_font(s_date_layer, s_font_primary_small);
-    text_layer_set_text_color(s_date_layer, THEME.text_color);
-    text_layer_set_background_color(s_date_layer, GColorClear);
-    text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
-    layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
+    // Sunrise time.
+    int solar_height = 18;
 
-    // Day of the week.
-    s_day_layer = text_layer_create(
-        GRect(bounds.size.w / 2, bounds.size.h - footer_height, bounds.size.w / 2 - PADDING_X, footer_height));
-    text_layer_set_font(s_day_layer, s_font_primary_small);
-    text_layer_set_text_color(s_day_layer, THEME.text_color);
-    text_layer_set_background_color(s_day_layer, GColorClear);
-    text_layer_set_text_alignment(s_day_layer, GTextAlignmentRight);
-    layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
-
-    // Sunrise time (above UTC time).
-    int utc_height = 18;
-    int utc_y = bounds.size.h - footer_height - utc_height + 2; // Space above date/day footer.
-    int sunrise_height = 18;
-    int sunrise_y = utc_y - sunrise_height;
-    int sunset_height = 18;
-    int sunset_y = sunrise_y;
-
-    s_sunrise_icon_layer = font_render_icon_small(window_layer, ICON_SUNRISE, PADDING_X, sunrise_y, false, false);
+    // Sunrise time.
+    s_sunrise_icon_layer =
+        font_render_icon_small(window_layer, ICON_SUNRISE, PADDING_X, bounds.size.h - solar_height, false, false);
     text_layer_set_text_color(s_sunrise_icon_layer, THEME.text_color);
     GRect sunrise_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunrise_icon_layer));
 
     s_sunrise_layer =
-        text_layer_create(GRect(PADDING_X + sunrise_icon_bounds.size.w + PADDING_X, sunrise_y,
-                                bounds.size.w - sunrise_icon_bounds.size.w - (PADDING_X * 2), sunrise_height));
+        text_layer_create(GRect(PADDING_X + sunrise_icon_bounds.size.w + PADDING_X, bounds.size.h - solar_height,
+                                bounds.size.w - sunrise_icon_bounds.size.w - (PADDING_X * 2), solar_height));
     text_layer_set_font(s_sunrise_layer, s_font_primary_small);
     text_layer_set_text_color(s_sunrise_layer, THEME.text_color);
     text_layer_set_background_color(s_sunrise_layer, GColorClear);
@@ -165,19 +179,23 @@ void time_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(s_sunrise_layer));
 
     // Sunset time mirrored on the right.
-    s_sunset_icon_layer = font_render_icon_small(window_layer, ICON_SUNSET, PADDING_X, sunset_y, true, false);
+    s_sunset_icon_layer =
+        font_render_icon_small(window_layer, ICON_SUNSET, PADDING_X, bounds.size.h - solar_height, true, false);
     text_layer_set_text_color(s_sunset_icon_layer, THEME.text_color);
     GRect sunset_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunset_icon_layer));
 
     int sunset_text_width = bounds.size.w - sunset_icon_bounds.size.w - (PADDING_X * 2) - 2;
-    s_sunset_layer = text_layer_create(GRect(PADDING_X, sunset_y, sunset_text_width, sunset_height));
+    s_sunset_layer = text_layer_create(GRect(PADDING_X, bounds.size.h - solar_height, sunset_text_width, solar_height));
     text_layer_set_font(s_sunset_layer, s_font_primary_small);
     text_layer_set_text_color(s_sunset_layer, THEME.text_color);
     text_layer_set_background_color(s_sunset_layer, GColorClear);
     text_layer_set_text_alignment(s_sunset_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_sunset_layer));
 
-    // UTC time (above footer).
+    int utc_height = 22;
+    int utc_y = bounds.size.h - date_height - utc_height + 2;
+
+    // UTC time.
     s_utc_icon_layer = font_render_icon_small(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
     text_layer_set_text_color(s_utc_icon_layer, THEME.text_color);
     GRect utc_icon_bounds = layer_get_bounds(text_layer_get_layer(s_utc_icon_layer));
@@ -208,4 +226,5 @@ void time_unload(void) {
     text_layer_destroy(s_sunset_icon_layer);
     text_layer_destroy(s_sunset_layer);
     layer_destroy(s_time_layer_container);
+    layer_destroy(s_date_layer_container);
 }
