@@ -146,7 +146,7 @@ char *weather_get_condition_icon(void) {
     switch (s_weather_code) {
     case 0:
     case 1: // Clear.
-        return weather_is_night() ? "" : "";
+        return weather_is_night() ? "" : "";
     case 2:
     case 3: // Overcast.
         return weather_is_night() ? "" : "";
@@ -183,7 +183,7 @@ char *weather_get_condition_icon(void) {
     case 99: // Hail storm.
         return weather_is_night() ? "" : "";
     default: // Clear (should never occur).
-        return weather_is_night() ? "" : "";
+        return weather_is_night() ? "" : "";
     }
 }
 

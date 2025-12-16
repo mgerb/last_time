@@ -63,7 +63,7 @@
           "type": "font",
           "name": "FONT_ICONS_48",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[]"
+          "characterRegex": "[]"
         },
         {
           "type": "font",
