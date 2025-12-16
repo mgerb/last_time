@@ -2,6 +2,7 @@
 #include "font.h"
 #include "gcolor_definitions.h"
 #include "pebble.h"
+#include <assert.h>
 
 static TextLayer *s_time_layer;
 static Layer *s_time_layer_container;
@@ -18,6 +19,21 @@ static char s_sunrise_buffer[6] = "--:--";
 static char s_sunset_buffer[6] = "--:--";
 
 const int TIME_CONTAINER_HEIGHT = 50;
+
+static void format_time(char *buffer, size_t buffer_size, struct tm *time_value) {
+    if (clock_is_24h_style()) {
+        strftime(buffer, buffer_size, "%H:%M", time_value);
+        return;
+    }
+
+    assert(buffer_size >= 2);
+
+    // Trim off leading 0 in 12 hour mode.
+    strftime(buffer, buffer_size, "%I:%M", time_value);
+    if (buffer[0] == '0') {
+        memmove(buffer, buffer + 1, buffer_size - 1);
+    }
+}
 
 static void time_update_date_and_day(void) {
     time_t now = time(NULL);
@@ -55,7 +71,7 @@ void time_update_sunrise(time_t sunrise) {
     }
 
     struct tm *t = localtime(&sunrise);
-    strftime(s_sunrise_buffer, sizeof(s_sunrise_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", t);
+    format_time(s_sunrise_buffer, sizeof(s_sunrise_buffer), t);
     text_layer_set_text(s_sunrise_layer, s_sunrise_buffer);
 }
 
@@ -71,7 +87,7 @@ void time_update_sunset(time_t sunset) {
     }
 
     struct tm *t = localtime(&sunset);
-    strftime(s_sunset_buffer, sizeof(s_sunset_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", t);
+    format_time(s_sunset_buffer, sizeof(s_sunset_buffer), t);
     text_layer_set_text(s_sunset_layer, s_sunset_buffer);
 }
 
@@ -81,8 +97,8 @@ void time_update(void) {
     struct tm *tick_time = localtime(&temp);
 
     // Write the current hours and minutes into a buffer
-    static char s_buffer[8];
-    strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
+    static char s_buffer[6];
+    format_time(s_buffer, sizeof(s_buffer), tick_time);
 
     // Display this time on the TextLayer
     text_layer_set_text(s_time_layer, s_buffer);
@@ -157,7 +173,7 @@ void time_load(Window *window) {
     s_time_layer = text_layer_create(GRect(0, (TIME_CONTAINER_HEIGHT - time_height) / 2, bounds.size.w, time_height));
     text_layer_set_font(s_time_layer, s_font_time_large);
     text_layer_set_text_color(s_time_layer, THEME.text_color_secondary);
-    text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
+    text_layer_set_text_alignment(s_time_layer, GTextAlignmentRight);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
 
     // Sunrise time.
