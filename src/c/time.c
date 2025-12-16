@@ -16,11 +16,8 @@ static TextLayer *s_utc_icon_layer;
 static TextLayer *s_utc_layer;
 static TextLayer *s_date_layer;
 static TextLayer *s_day_layer;
-static TextLayer *s_moon_icon_layer;
-static TextLayer *s_moon_layer;
 static char s_sunrise_buffer[6] = "--:--";
 static char s_sunset_buffer[6] = "--:--";
-static char s_moon_label_buffer[5] = "----";
 
 const int TIME_CONTAINER_HEIGHT = 50;
 
@@ -93,32 +90,6 @@ void time_update_sunset(time_t sunset) {
     struct tm *t = localtime(&sunset);
     format_time(s_sunset_buffer, sizeof(s_sunset_buffer), t);
     text_layer_set_text(s_sunset_layer, s_sunset_buffer);
-}
-
-static const char *MOON_ICONS[] = {"", "", "", "", "", "", "", "", "", "",
-                                   "", "", "", "", "", "", "", "", "", "",
-                                   "", "", "", "", "", "", "", ""};
-static const char *MOON_LABELS[] = {"NEW",  "WXC1", "WXC2", "WXC3", "WXC4", "WXC5", "WXC6", "1ST",  "WXG1", "WXG2",
-                                    "WXG3", "WXG4", "WXG5", "WXG6", "FULL", "WNG1", "WNG2", "WNG3", "WNG4", "WNG5",
-                                    "WNG6", "3RD",  "WNC1", "WNC2", "WNC3", "WNC4", "WNC5", "WNC6"};
-static const int MOON_PHASES = 28;
-static const char *DEFAULT_MOON_ICON = "";
-
-/** Moon phase < 0 means that it is not yet known. */
-void time_update_moon(int32_t moon_phase) {
-    if (!s_moon_layer || !s_moon_icon_layer) {
-        return;
-    }
-
-    if (moon_phase < 0 || moon_phase >= MOON_PHASES) {
-        text_layer_set_text(s_moon_layer, s_moon_label_buffer);
-        text_layer_set_text(s_moon_icon_layer, DEFAULT_MOON_ICON);
-        return;
-    }
-
-    snprintf(s_moon_label_buffer, sizeof(s_moon_label_buffer), "%s", MOON_LABELS[moon_phase]);
-    text_layer_set_text(s_moon_layer, s_moon_label_buffer);
-    text_layer_set_text(s_moon_icon_layer, MOON_ICONS[moon_phase]);
 }
 
 void time_update(void) {
@@ -237,26 +208,8 @@ void time_load(Window *window) {
     text_layer_set_background_color(s_sunset_layer, GColorClear);
     text_layer_set_text_alignment(s_sunset_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_sunset_layer));
-
-    // Moon phase row above sunset (bottom right).
-    int moon_height = 22;
-    int moon_y = bounds.size.h - (solar_height * 2) - 2;
-
-    s_moon_icon_layer = font_render_icon_small(window_layer, DEFAULT_MOON_ICON, PADDING_X, moon_y, true, false);
-    text_layer_set_text_color(s_moon_icon_layer, THEME.text_color);
-    GRect moon_icon_bounds = layer_get_bounds(text_layer_get_layer(s_moon_icon_layer));
-
-    int moon_text_width = bounds.size.w - moon_icon_bounds.size.w - (PADDING_X * 2) - 2;
-    s_moon_layer = text_layer_create(GRect(PADDING_X, moon_y, moon_text_width, moon_height));
-    text_layer_set_font(s_moon_layer, s_font_primary_small);
-    text_layer_set_text_color(s_moon_layer, THEME.text_color);
-    text_layer_set_background_color(s_moon_layer, GColorClear);
-    text_layer_set_text_alignment(s_moon_layer, GTextAlignmentRight);
-    text_layer_set_text(s_moon_layer, s_moon_label_buffer);
-    layer_add_child(window_layer, text_layer_get_layer(s_moon_layer));
-
-    int utc_height = moon_height;
-    int utc_y = moon_y;
+    int utc_height = 22;
+    int utc_y = bounds.size.h - date_height - utc_height + 2;
 
     // UTC time.
     s_utc_icon_layer = font_render_icon_small(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
@@ -276,7 +229,6 @@ void time_load(Window *window) {
     time_update_utc();
     time_update_sunrise(0);
     time_update_sunset(0);
-    time_update_moon(-1);
 }
 
 void time_unload(void) {
@@ -289,8 +241,6 @@ void time_unload(void) {
     text_layer_destroy(s_sunrise_layer);
     text_layer_destroy(s_sunset_icon_layer);
     text_layer_destroy(s_sunset_layer);
-    text_layer_destroy(s_moon_icon_layer);
-    text_layer_destroy(s_moon_layer);
     layer_destroy(s_time_layer_container);
     layer_destroy(s_date_layer_container);
 }

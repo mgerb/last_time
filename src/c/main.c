@@ -3,6 +3,7 @@
 #include "bluetooth.h"
 #include "common.h"
 #include "font.h"
+#include "moon.h"
 #include "pebble.h"
 #include "time.h"
 #include "weather.h"
@@ -31,6 +32,7 @@ static void window_load(Window *window) {
     // Load UI things.
     font_load();
     time_load(window);
+    moon_load(window);
     load_top_right(window);
     bluetooth_load(window);
     weather_load(window);
@@ -39,6 +41,7 @@ static void window_load(Window *window) {
 
 static void window_unload(Window *window) {
     time_unload();
+    moon_unload();
     weather_unload();
     bluetooth_unload();
     battery_unload();

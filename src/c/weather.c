@@ -1,5 +1,6 @@
 #include "weather.h"
 #include "font.h"
+#include "moon.h"
 #include "time.h"
 
 #define WEATHER_CACHE_KEY 1
@@ -226,7 +227,8 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     Tuple *sunset_tuple = dict_find(iterator, MESSAGE_KEY_sunset);
     Tuple *moon_phase_tuple = dict_find(iterator, MESSAGE_KEY_moon_phase);
 
-    if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple || !moon_phase_tuple) {
+    if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple ||
+        !moon_phase_tuple) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
                 condition_tuple);
         weather_request_reset_state();
@@ -241,7 +243,7 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     s_moon_phase = moon_phase_tuple->value->int32;
     time_update_sunrise((time_t)weather_sunrise);
     time_update_sunset((time_t)weather_sunset);
-    time_update_moon(s_moon_phase);
+    moon_update(s_moon_phase);
 
     text_layer_set_text(s_temperature_layer, s_temperature_buffer);
     text_layer_set_text(s_condition_layer, s_condition_buffer);
@@ -257,7 +259,7 @@ void weather_load(Window *window) {
     weather_load_and_apply_cache();
     time_update_sunrise((time_t)weather_sunrise);
     time_update_sunset((time_t)weather_sunset);
-    time_update_moon(s_moon_phase);
+    moon_update(s_moon_phase);
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
     int temperature_row_height = 24;
