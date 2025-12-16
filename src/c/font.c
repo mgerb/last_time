@@ -19,7 +19,6 @@ const char *ICON_BATTERY_100 = "";
 const char *ICON_STEPS = "";
 const char *ICON_UTC = "";
 const char *ICON_BLUETOOTH_CONNECTED = "󰂯";
-const char *ICON_BLUETOOTH_DISCONNECTED = "󰂲";
 const char *ICON_SUNRISE = "";
 const char *ICON_SUNSET = "";
 
@@ -62,7 +61,7 @@ void font_load(void) {
 
     // Nerd font icons. See fonts in package.json. Using Lilex nerd fonts because
     // icons just did not render right with other nerd fonts for some reason.
-    s_font_icons_xsmall = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_21));
+    s_font_icons_xsmall = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_18));
     s_font_icons_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_28));
     s_font_icons_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_36));
     s_font_icons_large = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_48));

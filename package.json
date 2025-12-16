@@ -43,9 +43,9 @@
       "media": [
         {
           "type": "font",
-          "name": "FONT_ICONS_21",
+          "name": "FONT_ICONS_18",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[󰂯󰂲]"
+          "characterRegex": "[󰂯]"
         },
         {
           "type": "font",

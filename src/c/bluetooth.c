@@ -10,8 +10,9 @@ static void bluetooth_update_icon(void) {
         return;
     }
 
-    text_layer_set_text(s_bluetooth_layer_icon,
-                        s_bluetooth_connected ? ICON_BLUETOOTH_CONNECTED : ICON_BLUETOOTH_DISCONNECTED);
+    layer_set_hidden(text_layer_get_layer(s_bluetooth_layer_icon), !s_bluetooth_connected);
+    text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
+    text_layer_set_text(s_bluetooth_layer_icon, ICON_BLUETOOTH_CONNECTED);
 }
 
 static void bluetooth_connection_handler(bool connected) {
@@ -44,7 +45,7 @@ void bluetooth_load(Window *window) {
     GRect bounds = layer_get_bounds(window_layer);
 
     // Position icon on the right, just above the time container.
-    int icon_y = (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - 16;
+    int icon_y = (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - 14;
     s_bluetooth_layer_icon =
         font_render_icon_xsmall(window_layer, ICON_BLUETOOTH_CONNECTED, PADDING_X, icon_y, true, false);
     text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
