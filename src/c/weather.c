@@ -14,6 +14,7 @@ static TextLayer *s_temperature_layer;
 static char s_temperature_buffer[8] = "--";
 static char s_condition_buffer[20] = "--";
 static int32_t s_weather_code = -1;
+static int32_t s_moon_phase = -1;
 int32_t weather_sunrise = 0;
 int32_t weather_sunset = 0;
 
@@ -26,6 +27,7 @@ typedef struct {
     int32_t weather_code;
     int32_t sunrise;
     int32_t sunset;
+    int32_t moon_phase;
 } WeatherCache;
 
 static bool s_weather_request_in_progress = false;
@@ -60,13 +62,14 @@ bool weather_cache_is_valid(const WeatherCache *cache) {
 }
 
 void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code, int32_t sunrise,
-                        int32_t sunset) {
+                        int32_t sunset, int32_t moon_phase) {
     WeatherCache cache = {
         .temperature_f = temperature_f,
         .timestamp = time(NULL),
         .weather_code = weather_code,
         .sunrise = sunrise,
         .sunset = sunset,
+        .moon_phase = moon_phase,
     };
     snprintf(cache.condition, sizeof(cache.condition), "%s", condition);
     persist_write_data(WEATHER_CACHE_KEY, &cache, sizeof(cache));
@@ -86,6 +89,7 @@ bool weather_load_and_apply_cache(void) {
     s_weather_code = cache.weather_code;
     weather_sunrise = cache.sunrise;
     weather_sunset = cache.sunset;
+    s_moon_phase = cache.moon_phase;
     return true;
 }
 
@@ -220,8 +224,9 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     Tuple *weather_code_tuple = dict_find(iterator, MESSAGE_KEY_weather_code);
     Tuple *sunrise_tuple = dict_find(iterator, MESSAGE_KEY_sunrise);
     Tuple *sunset_tuple = dict_find(iterator, MESSAGE_KEY_sunset);
+    Tuple *moon_phase_tuple = dict_find(iterator, MESSAGE_KEY_moon_phase);
 
-    if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple) {
+    if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple || !moon_phase_tuple) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
                 condition_tuple);
         weather_request_reset_state();
@@ -233,8 +238,10 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     s_weather_code = weather_code_tuple->value->int32;
     weather_sunrise = sunrise_tuple->value->int32;
     weather_sunset = sunset_tuple->value->int32;
+    s_moon_phase = moon_phase_tuple->value->int32;
     time_update_sunrise((time_t)weather_sunrise);
     time_update_sunset((time_t)weather_sunset);
+    time_update_moon(s_moon_phase);
 
     text_layer_set_text(s_temperature_layer, s_temperature_buffer);
     text_layer_set_text(s_condition_layer, s_condition_buffer);
@@ -242,7 +249,7 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     weather_position_icon();
 
     weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, weather_sunrise,
-                       weather_sunset);
+                       weather_sunset, s_moon_phase);
     weather_request_reset_state();
 }
 
@@ -250,6 +257,7 @@ void weather_load(Window *window) {
     weather_load_and_apply_cache();
     time_update_sunrise((time_t)weather_sunrise);
     time_update_sunset((time_t)weather_sunset);
+    time_update_moon(s_moon_phase);
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
     int temperature_row_height = 24;

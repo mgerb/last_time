@@ -28,6 +28,7 @@
       "location"
     ],
     "messageKeys": [
+      "moon_phase",
       "latitude",
       "longitude",
       "temperature_f",
@@ -51,7 +52,7 @@
           "type": "font",
           "name": "FONT_ICONS_28",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[]"
+          "characterRegex": "[ ]"
         },
         {
           "type": "font",

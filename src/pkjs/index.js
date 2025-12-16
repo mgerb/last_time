@@ -151,6 +151,10 @@ function locationSuccess(pos) {
     tomorrow.setDate(tomorrow.getDate() + 1);
     var suncalcTimesTomorrow = suncalc.getTimes(tomorrow, latitude, longitude);
 
+    // Moon phase: 0=new, 14=full. Use 28 buckets to match Nerd Font icons.
+    var illumination = suncalc.getMoonIllumination(now);
+    var moon_phase = Math.round(illumination.phase * 27);
+
     var sunriseToday = new Date(suncalcTimesToday.sunrise);
     var sunsetToday = new Date(suncalcTimesToday.sunset);
     var sunriseTomorrow = new Date(suncalcTimesTomorrow.sunrise);
@@ -166,7 +170,8 @@ function locationSuccess(pos) {
       high_f,
       low_f,
       sunrise: Math.floor(nextSunrise.getTime() / 1000),
-      sunset: Math.floor(nextSunset.getTime() / 1000)
+      sunset: Math.floor(nextSunset.getTime() / 1000),
+      moon_phase
     };
 
     console.log("weatherData:", JSON.stringify(weatherData));
