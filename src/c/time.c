@@ -1,4 +1,5 @@
 #include "time.h"
+#include "common.h"
 #include "font.h"
 #include "gcolor_definitions.h"
 #include "pebble.h"
@@ -147,19 +148,19 @@ void time_load(Window *window) {
     // Date below main time display.
     GRect s_date_layer_container_frame = layer_get_frame(s_date_layer_container);
     int date_y = s_date_layer_container_frame.origin.y + s_date_layer_container_frame.size.h - date_height;
-    s_date_layer = text_layer_create(GRect(PADDING_X, date_y, bounds.size.w, date_height));
+    s_date_layer = text_layer_create(GRect(0, date_y, bounds.size.w - PADDING_X, date_height));
     text_layer_set_font(s_date_layer, s_font_primary_small);
     text_layer_set_text_color(s_date_layer, THEME.text_color_secondary);
     text_layer_set_background_color(s_date_layer, GColorClear);
-    text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_date_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 
     // Day of the week.
-    s_day_layer = text_layer_create(GRect(bounds.size.w / 2, date_y, bounds.size.w / 2 - PADDING_X, date_height));
+    s_day_layer = text_layer_create(GRect(PADDING_X, date_y, bounds.size.w, date_height));
     text_layer_set_font(s_day_layer, s_font_primary_small);
     text_layer_set_text_color(s_day_layer, THEME.text_color_secondary);
     text_layer_set_background_color(s_day_layer, GColorClear);
-    text_layer_set_text_alignment(s_day_layer, GTextAlignmentRight);
+    text_layer_set_text_alignment(s_day_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
 
     // Main time container.
