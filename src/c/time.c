@@ -20,6 +20,8 @@ static char s_sunrise_buffer[6] = "--:--";
 static char s_sunset_buffer[6] = "--:--";
 
 const int TIME_CONTAINER_HEIGHT = 50;
+const int UTC_ROW_HEIGHT = 22;
+const int SOLAR_TIME_ROW_HEIGHT = 18;
 
 static void format_time(char *buffer, size_t buffer_size, struct tm *time_value) {
     if (clock_is_24h_style()) {
@@ -178,17 +180,14 @@ void time_load(Window *window) {
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
 
     // Sunrise time.
-    int solar_height = 18;
-
-    // Sunrise time.
-    s_sunrise_icon_layer =
-        font_render_icon_small(window_layer, ICON_SUNRISE, PADDING_X, bounds.size.h - solar_height, false, false);
+    s_sunrise_icon_layer = font_render_icon_small(window_layer, ICON_SUNRISE, PADDING_X,
+                                                  bounds.size.h - SOLAR_TIME_ROW_HEIGHT, false, false);
     text_layer_set_text_color(s_sunrise_icon_layer, THEME.text_color);
     GRect sunrise_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunrise_icon_layer));
 
-    s_sunrise_layer =
-        text_layer_create(GRect(PADDING_X + sunrise_icon_bounds.size.w + PADDING_X, bounds.size.h - solar_height,
-                                bounds.size.w - sunrise_icon_bounds.size.w - (PADDING_X * 2), solar_height));
+    s_sunrise_layer = text_layer_create(
+        GRect(PADDING_X + sunrise_icon_bounds.size.w + PADDING_X, bounds.size.h - SOLAR_TIME_ROW_HEIGHT,
+              bounds.size.w - sunrise_icon_bounds.size.w - (PADDING_X * 2), SOLAR_TIME_ROW_HEIGHT));
     text_layer_set_font(s_sunrise_layer, s_font_primary_small);
     text_layer_set_text_color(s_sunrise_layer, THEME.text_color);
     text_layer_set_background_color(s_sunrise_layer, GColorClear);
@@ -196,28 +195,28 @@ void time_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(s_sunrise_layer));
 
     // Sunset time mirrored on the right.
-    s_sunset_icon_layer =
-        font_render_icon_small(window_layer, ICON_SUNSET, PADDING_X, bounds.size.h - solar_height, true, false);
+    s_sunset_icon_layer = font_render_icon_small(window_layer, ICON_SUNSET, PADDING_X,
+                                                 bounds.size.h - SOLAR_TIME_ROW_HEIGHT, true, false);
     text_layer_set_text_color(s_sunset_icon_layer, THEME.text_color);
     GRect sunset_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunset_icon_layer));
 
-    int sunset_text_width = bounds.size.w - sunset_icon_bounds.size.w - (PADDING_X * 2) - 2;
-    s_sunset_layer = text_layer_create(GRect(PADDING_X, bounds.size.h - solar_height, sunset_text_width, solar_height));
+    int sunset_text_width = bounds.size.w - sunset_icon_bounds.size.w - (PADDING_X * 2);
+    s_sunset_layer =
+        text_layer_create(GRect(0, bounds.size.h - SOLAR_TIME_ROW_HEIGHT, sunset_text_width, SOLAR_TIME_ROW_HEIGHT));
     text_layer_set_font(s_sunset_layer, s_font_primary_small);
     text_layer_set_text_color(s_sunset_layer, THEME.text_color);
     text_layer_set_background_color(s_sunset_layer, GColorClear);
     text_layer_set_text_alignment(s_sunset_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_sunset_layer));
-    int utc_height = 22;
-    int utc_y = bounds.size.h - date_height - utc_height + 2;
 
     // UTC time.
+    int utc_y = bounds.size.h - SOLAR_TIME_ROW_HEIGHT - UTC_ROW_HEIGHT + 2;
     s_utc_icon_layer = font_render_icon_small(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
     text_layer_set_text_color(s_utc_icon_layer, THEME.text_color);
     GRect utc_icon_bounds = layer_get_bounds(text_layer_get_layer(s_utc_icon_layer));
 
     s_utc_layer = text_layer_create(GRect(PADDING_X + utc_icon_bounds.size.w + PADDING_X, utc_y,
-                                          bounds.size.w - utc_icon_bounds.size.w - (PADDING_X * 2), utc_height));
+                                          bounds.size.w - utc_icon_bounds.size.w - (PADDING_X * 2), UTC_ROW_HEIGHT));
     text_layer_set_font(s_utc_layer, s_font_primary_small);
     text_layer_set_text_color(s_utc_layer, THEME.text_color);
     text_layer_set_background_color(s_utc_layer, GColorClear);

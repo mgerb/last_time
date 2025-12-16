@@ -1,6 +1,7 @@
 #include "moon.h"
 #include "common.h"
 #include "font.h"
+#include "time.h"
 
 static TextLayer *s_moon_icon_layer;
 static TextLayer *s_moon_layer;
@@ -35,8 +36,7 @@ void moon_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
-    int row_height = 18;
-    int moon_y = bounds.size.h - (row_height * 2);
+    int moon_y = bounds.size.h - SOLAR_TIME_ROW_HEIGHT - UTC_ROW_HEIGHT + 2;
 
     // Icon on the right, above the sunset row.
     s_moon_icon_layer = font_render_icon_small(window_layer, DEFAULT_MOON_ICON, PADDING_X, moon_y, true, false);
@@ -44,9 +44,8 @@ void moon_load(Window *window) {
     GRect moon_icon_bounds = layer_get_bounds(text_layer_get_layer(s_moon_icon_layer));
 
     // Label to the left of the icon, constrained to the right half to avoid overlapping UTC.
-    int text_x = bounds.size.w / 2;
-    int text_width = bounds.size.w - text_x - moon_icon_bounds.size.w - (PADDING_X * 2) - 2;
-    s_moon_layer = text_layer_create(GRect(text_x, moon_y, text_width, row_height));
+    int text_width = bounds.size.w - moon_icon_bounds.size.w - (PADDING_X * 2);
+    s_moon_layer = text_layer_create(GRect(0, moon_y, text_width, UTC_ROW_HEIGHT));
     text_layer_set_font(s_moon_layer, s_font_primary_small);
     text_layer_set_text_color(s_moon_layer, THEME.text_color);
     text_layer_set_background_color(s_moon_layer, GColorClear);

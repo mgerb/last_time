@@ -4,6 +4,8 @@
 #include "pebble.h"
 
 extern const int TIME_CONTAINER_HEIGHT;
+extern const int UTC_ROW_HEIGHT;
+extern const int SOLAR_TIME_ROW_HEIGHT;
 
 void time_update(void);
 void time_update_sunrise(time_t sunrise);
