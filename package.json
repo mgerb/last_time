@@ -68,19 +68,20 @@
         },
         {
           "type": "font",
+          "name": "FONT_TERMINUS_MONO_11",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "characterRegex": "[AMP]"
+        },
+        {
+          "type": "font",
           "name": "FONT_TERMINUS_MONO_14",
           "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
         },
         {
           "type": "font",
           "name": "FONT_TERMINUS_MONO_24",
-          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
-        },
-        {
-          "type": "font",
-          "name": "FONT_DSEG_12",
-          "file": "fonts/DSEG/DSEG7-Classic-MINI/DSEG7ClassicMini-Regular.ttf",
-          "characterRegex": "[0-9:]"
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "characterRegex": "[0-9°\\-]"
         },
         {
           "type": "font",

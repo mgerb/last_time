@@ -1,9 +1,9 @@
 #include "font.h"
 
+GFont s_font_am_pm;
 GFont s_font_primary_small;
-GFont s_font_primary_medium;
+GFont s_font_temperature;
 
-GFont s_font_time_small;
 GFont s_font_time_large;
 
 GFont s_font_icons_xsmall;
@@ -53,10 +53,12 @@ static TextLayer *font_render_icon(Layer *container_layer, GFont font, const cha
 
 void font_load(void) {
     s_font_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_14));
-    s_font_primary_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_24));
+
+    // Specific fonts with limited characters.
+    s_font_temperature = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_24));
+    s_font_am_pm = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_11));
 
     // Time font.
-    s_font_time_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DSEG_12));
     s_font_time_large = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DSEG_42));
 
     // Nerd font icons. See fonts in package.json. Using Lilex nerd fonts because
@@ -70,11 +72,13 @@ void font_load(void) {
 void font_unload(void) {
     // Primary fonts.
     fonts_unload_custom_font(s_font_primary_small);
-    fonts_unload_custom_font(s_font_primary_medium);
 
     // Time font.
-    fonts_unload_custom_font(s_font_time_small);
     fonts_unload_custom_font(s_font_time_large);
+
+    // Specific fonts with limited characters.
+    fonts_unload_custom_font(s_font_temperature);
+    fonts_unload_custom_font(s_font_am_pm);
 
     // Icons.
     fonts_unload_custom_font(s_font_icons_xsmall);

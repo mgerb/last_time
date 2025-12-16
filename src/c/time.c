@@ -6,6 +6,7 @@
 #include <assert.h>
 
 static TextLayer *s_time_layer;
+static TextLayer *s_ampm_layer;
 static Layer *s_time_layer_container;
 static Layer *s_date_layer_container;
 static TextLayer *s_sunrise_icon_layer;
@@ -18,6 +19,7 @@ static TextLayer *s_date_layer;
 static TextLayer *s_day_layer;
 static char s_sunrise_buffer[6] = "--:--";
 static char s_sunset_buffer[6] = "--:--";
+static char s_ampm_buffer[3] = "";
 
 const int TIME_CONTAINER_HEIGHT = 50;
 const int UTC_ROW_HEIGHT = 22;
@@ -36,6 +38,23 @@ static void format_time(char *buffer, size_t buffer_size, struct tm *time_value)
     if (buffer[0] == '0') {
         memmove(buffer, buffer + 1, buffer_size - 1);
     }
+}
+
+static void time_update_ampm(struct tm *time_value) {
+    if (!s_ampm_layer) {
+        return;
+    }
+
+    const bool is_24h = clock_is_24h_style();
+    layer_set_hidden(text_layer_get_layer(s_ampm_layer), is_24h);
+
+    if (is_24h) {
+        return;
+    }
+
+    snprintf(s_ampm_buffer, sizeof(s_ampm_buffer), "%s", (time_value->tm_hour >= 12) ? "PM" : "AM");
+
+    text_layer_set_text(s_ampm_layer, s_ampm_buffer);
 }
 
 static void time_update_date_and_day(void) {
@@ -105,6 +124,7 @@ void time_update(void) {
 
     // Display this time on the TextLayer
     text_layer_set_text(s_time_layer, s_buffer);
+    time_update_ampm(tick_time);
 
     time_update_date_and_day();
     time_update_utc();
@@ -125,12 +145,10 @@ static void time_layer_container_update(Layer *layer, GContext *ctx) {
 }
 
 static void date_layer_container_update(Layer *layer, GContext *ctx) {
-    GRect bounds = layer_get_bounds(layer);
     graphics_context_set_stroke_color(ctx, GColorWhite);
     graphics_context_set_stroke_width(ctx, 2);
 
     // Fill.
-    // graphics_context_set_fill_color(ctx, GColorLightGray);
     graphics_context_set_fill_color(ctx, THEME.bg_color_secondary);
     graphics_fill_rect(ctx, layer_get_bounds(layer), border_radius, GCornersAll);
 }
@@ -171,11 +189,20 @@ void time_load(Window *window) {
     layer_set_update_proc(s_time_layer_container, time_layer_container_update);
     layer_add_child(window_layer, s_time_layer_container);
 
+    // AM/PM indicator (12h mode only), top-left of the time container.
+    s_ampm_layer = text_layer_create(GRect(PADDING_X, 0, bounds.size.w, 12));
+    text_layer_set_font(s_ampm_layer, s_font_am_pm);
+    text_layer_set_text_color(s_ampm_layer, THEME.text_color_secondary);
+    text_layer_set_background_color(s_ampm_layer, GColorClear);
+    text_layer_set_text_alignment(s_ampm_layer, GTextAlignmentLeft);
+    layer_add_child(s_time_layer_container, text_layer_get_layer(s_ampm_layer));
+
     // Main time display.
     int time_height = 42;
     s_time_layer = text_layer_create(GRect(0, (TIME_CONTAINER_HEIGHT - time_height) / 2, bounds.size.w, time_height));
     text_layer_set_font(s_time_layer, s_font_time_large);
     text_layer_set_text_color(s_time_layer, THEME.text_color_secondary);
+    text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentRight);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
 
@@ -232,6 +259,7 @@ void time_load(Window *window) {
 
 void time_unload(void) {
     text_layer_destroy(s_time_layer);
+    text_layer_destroy(s_ampm_layer);
     text_layer_destroy(s_utc_icon_layer);
     text_layer_destroy(s_utc_layer);
     text_layer_destroy(s_date_layer);

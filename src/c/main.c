@@ -74,6 +74,7 @@ static void deinit(void) {
 #if defined(PBL_HEALTH)
     health_deinit();
 #endif
+    tick_timer_service_unsubscribe();
     window_destroy(s_window);
 }
 

@@ -267,7 +267,7 @@ void weather_load(Window *window) {
 
     // Temperature text (top-left).
     s_temperature_layer = text_layer_create(GRect(PADDING_X, 2, 80, temperature_row_height));
-    text_layer_set_font(s_temperature_layer, s_font_primary_medium);
+    text_layer_set_font(s_temperature_layer, s_font_temperature);
     text_layer_set_text_color(s_temperature_layer, THEME.text_color);
     text_layer_set_background_color(s_temperature_layer, GColorClear);
     text_layer_set_text_alignment(s_temperature_layer, GTextAlignmentLeft);

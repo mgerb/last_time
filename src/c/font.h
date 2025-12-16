@@ -2,10 +2,10 @@
 
 #include <pebble.h>
 
+extern GFont s_font_am_pm;
 extern GFont s_font_primary_small;
-extern GFont s_font_primary_medium;
+extern GFont s_font_temperature;
 
-extern GFont s_font_time_small;
 extern GFont s_font_time_large;
 
 extern GFont s_font_icons_xsmall;
