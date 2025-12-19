@@ -1,9 +1,26 @@
 #include "app_message.h"
+#include "settings.h"
+#include "time.h"
 #include "weather.h"
 
+// TODO: create a discriminator
+static bool is_config_message(DictionaryIterator *iterator) {
+    return dict_find(iterator, MESSAGE_KEY_config_temperature) || dict_find(iterator, MESSAGE_KEY_config_date_format) ||
+           dict_find(iterator, MESSAGE_KEY_config_vibrate_disconnect) ||
+           dict_find(iterator, MESSAGE_KEY_config_vibrate_top_hour);
+}
+
 static void am_inbox_received_callback(DictionaryIterator *iterator, void *context) {
-    weather_inbox_received_callback(iterator, context);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox received");
+
+    if (is_config_message(iterator)) {
+        settings_update_from_message(iterator);
+        weather_refresh_temperature();
+        time_update();
+        return;
+    }
+
+    weather_inbox_received_callback(iterator, context);
 }
 
 static void am_inbox_dropped_callback(AppMessageResult reason, void *context) {

@@ -5,6 +5,7 @@
 #include "font.h"
 #include "moon.h"
 #include "pebble.h"
+#include "settings.h"
 #include "time.h"
 #include "weather.h"
 
@@ -12,9 +13,16 @@
 #include "health.h"
 #endif
 
+static int s_last_vibrate_hour = -1;
+
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "tick handler...");
     time_update();
+
+    if (app_settings.vibrate_top_hour && tick_time->tm_min == 0 && tick_time->tm_hour != s_last_vibrate_hour) {
+        vibes_short_pulse();
+        s_last_vibrate_hour = tick_time->tm_hour;
+    }
 
     weather_request_if_needed();
     weather_update_condition_icon();
@@ -52,6 +60,9 @@ static void window_unload(Window *window) {
 }
 
 static void init(void) {
+    // Settings must be loaded before anything else, otherwise they
+    // will contain garbage values, which will cause undefined behavior.
+    settings_load();
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){.load = window_load, .unload = window_unload});
     const bool animated = true;

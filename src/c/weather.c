@@ -1,10 +1,12 @@
 #include "weather.h"
 #include "font.h"
 #include "moon.h"
+#include "settings.h"
 #include "time.h"
 
+#include <limits.h>
+
 #define WEATHER_CACHE_KEY 1
-#define WEATHER_CACHE_TTL_SECONDS (15 * 60) // 15 minutes
 #define WEATHER_CACHE_CONDITION_LEN 20
 #define WEATHER_REQUEST_TIMEOUT_SECONDS 30
 
@@ -12,10 +14,10 @@ static TextLayer *s_weather_layer_icon;
 static TextLayer *s_condition_layer;
 static TextLayer *s_temperature_layer;
 
-static char s_temperature_buffer[8] = "--";
 static char s_condition_buffer[20] = "--";
 static int32_t s_weather_code = -1;
 static int32_t s_moon_phase = -1;
+static int32_t s_temperature_f = INT32_MIN;
 int32_t weather_sunrise = 0;
 int32_t weather_sunset = 0;
 
@@ -33,6 +35,61 @@ typedef struct {
 
 static bool s_weather_request_in_progress = false;
 static time_t s_weather_request_started_at = 0;
+
+static bool weather_cache_load(WeatherCache *cache);
+
+static void weather_cache_invalidate(void) {
+    WeatherCache cache;
+    if (!weather_cache_load(&cache)) {
+        return;
+    }
+
+    cache.timestamp = 0;
+    persist_write_data(WEATHER_CACHE_KEY, &cache, sizeof(cache));
+}
+
+static void weather_position_icon(void) {
+    if (!s_weather_layer_icon || !s_temperature_layer) {
+        return;
+    }
+
+    // Place the icon immediately to the right of the temperature text with a fixed gap.
+    GSize temp_size = text_layer_get_content_size(s_temperature_layer);
+    Layer *temp_layer = text_layer_get_layer(s_temperature_layer);
+    GRect temp_frame = layer_get_frame(temp_layer);
+
+    Layer *icon_layer = text_layer_get_layer(s_weather_layer_icon);
+    GRect icon_frame = layer_get_frame(icon_layer);
+    layer_set_frame(icon_layer, GRect(temp_frame.origin.x + temp_size.w + WEATHER_GAP, icon_frame.origin.y,
+                                      icon_frame.size.w, icon_frame.size.h));
+}
+
+static int32_t weather_convert_f_to_c(int32_t temperature_f) {
+    int32_t scaled = (temperature_f - 32) * 5;
+    if (scaled >= 0) {
+        return (scaled + 4) / 9;
+    }
+
+    return (scaled - 4) / 9;
+}
+
+void weather_refresh_temperature(void) {
+    if (!s_temperature_layer) {
+        return;
+    }
+
+    static char buffer[8] = "--";
+    if (s_temperature_f != INT32_MIN) {
+        int32_t display_temp =
+            app_settings.temperature[0] == 'c' ? weather_convert_f_to_c(s_temperature_f) : s_temperature_f;
+        snprintf(buffer, sizeof(buffer), "%d°", (int)display_temp);
+    } else {
+        snprintf(buffer, sizeof(buffer), "%s", "--");
+    }
+
+    text_layer_set_text(s_temperature_layer, buffer);
+    weather_position_icon();
+}
 
 void weather_request_reset_state(void) {
     s_weather_request_in_progress = false;
@@ -59,7 +116,8 @@ bool weather_cache_load(WeatherCache *cache) {
 
 bool weather_cache_is_valid(const WeatherCache *cache) {
     time_t now = time(NULL);
-    return difftime(now, cache->timestamp) < WEATHER_CACHE_TTL_SECONDS;
+    int32_t ttl_seconds = (int32_t)app_settings.weather_update_interval * 60;
+    return difftime(now, cache->timestamp) < ttl_seconds;
 }
 
 void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code, int32_t sunrise,
@@ -82,10 +140,11 @@ void weather_cache_save(int32_t temperature_f, const char *condition, int32_t we
 bool weather_load_and_apply_cache(void) {
     WeatherCache cache;
     if (!weather_cache_load(&cache) || !weather_cache_is_valid(&cache)) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "weather cache is not valid");
         return false;
     }
 
-    snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)cache.temperature_f);
+    s_temperature_f = cache.temperature_f;
     snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", cache.condition);
     s_weather_code = cache.weather_code;
     weather_sunrise = cache.sunrise;
@@ -103,6 +162,7 @@ void weather_send_request(void) {
 
     if (result != APP_MSG_OK) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox begin failed: %d", (int)result);
+        weather_cache_invalidate();
         weather_request_reset_state();
         return;
     }
@@ -112,6 +172,7 @@ void weather_send_request(void) {
     result = app_message_outbox_send();
     if (result != APP_MSG_OK) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed: %d", (int)result);
+        weather_cache_invalidate();
         weather_request_reset_state();
         return;
     }
@@ -196,26 +257,11 @@ void weather_update_condition_icon(void) {
     text_layer_set_text(s_weather_layer_icon, weather_get_condition_icon());
 }
 
-void weather_position_icon(void) {
-    if (!s_weather_layer_icon || !s_temperature_layer) {
-        return;
-    }
-
-    // Place the icon immediately to the right of the temperature text with a fixed gap.
-    GSize temp_size = text_layer_get_content_size(s_temperature_layer);
-    Layer *temp_layer = text_layer_get_layer(s_temperature_layer);
-    GRect temp_frame = layer_get_frame(temp_layer);
-
-    Layer *icon_layer = text_layer_get_layer(s_weather_layer_icon);
-    GRect icon_frame = layer_get_frame(icon_layer);
-    layer_set_frame(icon_layer, GRect(temp_frame.origin.x + temp_size.w + WEATHER_GAP, icon_frame.origin.y,
-                                      icon_frame.size.w, icon_frame.size.h));
-}
-
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
     Tuple *error_tuple = dict_find(iterator, MESSAGE_KEY_error);
     if (error_tuple) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "Weather request failed on phone: %ld", (long)error_tuple->value->int32);
+        weather_cache_invalidate();
         weather_request_reset_state();
         return;
     }
@@ -227,15 +273,7 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     Tuple *sunset_tuple = dict_find(iterator, MESSAGE_KEY_sunset);
     Tuple *moon_phase_tuple = dict_find(iterator, MESSAGE_KEY_moon_phase);
 
-    if (!temp_tuple || !condition_tuple || !weather_code_tuple || !sunrise_tuple || !sunset_tuple ||
-        !moon_phase_tuple) {
-        APP_LOG(APP_LOG_LEVEL_ERROR, "inbox_received_callback missing data (temp %p, condition %p)", temp_tuple,
-                condition_tuple);
-        weather_request_reset_state();
-        return;
-    }
-
-    snprintf(s_temperature_buffer, sizeof(s_temperature_buffer), "%d°", (int)temp_tuple->value->int32);
+    s_temperature_f = temp_tuple->value->int32;
     snprintf(s_condition_buffer, sizeof(s_condition_buffer), "%s", condition_tuple->value->cstring);
     s_weather_code = weather_code_tuple->value->int32;
     weather_sunrise = sunrise_tuple->value->int32;
@@ -245,10 +283,9 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
     time_update_sunset((time_t)weather_sunset);
     moon_update(s_moon_phase);
 
-    text_layer_set_text(s_temperature_layer, s_temperature_buffer);
+    weather_refresh_temperature();
     text_layer_set_text(s_condition_layer, s_condition_buffer);
     weather_update_condition_icon();
-    weather_position_icon();
 
     weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, weather_sunrise,
                        weather_sunset, s_moon_phase);
@@ -271,7 +308,7 @@ void weather_load(Window *window) {
     text_layer_set_text_color(s_temperature_layer, THEME.text_color);
     text_layer_set_background_color(s_temperature_layer, GColorClear);
     text_layer_set_text_alignment(s_temperature_layer, GTextAlignmentLeft);
-    text_layer_set_text(s_temperature_layer, s_temperature_buffer);
+    weather_refresh_temperature();
     layer_add_child(window_layer, text_layer_get_layer(s_temperature_layer));
 
     // Weather icon sits to the right of the temperature.

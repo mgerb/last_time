@@ -1,5 +1,6 @@
 #include "bluetooth.h"
 #include "pebble.h"
+#include "settings.h"
 #include "time.h"
 
 static TextLayer *s_bluetooth_layer_icon;
@@ -17,7 +18,7 @@ static void bluetooth_update_icon(void) {
 
 static void bluetooth_connection_handler(bool connected) {
     // Vibrate on connect/disconnect.
-    if (connected != s_bluetooth_connected) {
+    if (app_settings.vibrate_disconnect && connected != s_bluetooth_connected) {
         vibes_short_pulse();
     }
 

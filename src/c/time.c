@@ -3,6 +3,7 @@
 #include "font.h"
 #include "gcolor_definitions.h"
 #include "pebble.h"
+#include "settings.h"
 #include <assert.h>
 
 static TextLayer *s_time_layer;
@@ -57,14 +58,35 @@ static void time_update_ampm(struct tm *time_value) {
     text_layer_set_text(s_ampm_layer, s_ampm_buffer);
 }
 
+static const char *time_get_date_format(void) {
+    if (strcmp(app_settings.date_format, "YYYY-MM-DD") == 0) {
+        return "%Y-%m-%d";
+    }
+    if (strcmp(app_settings.date_format, "MM/DD/YYYY") == 0) {
+        return "%m/%d/%Y";
+    }
+    if (strcmp(app_settings.date_format, "DD/MM/YYYY") == 0) {
+        return "%d/%m/%Y";
+    }
+    if (strcmp(app_settings.date_format, "YYYY/MM/DD") == 0) {
+        return "%Y/%m/%d";
+    }
+    if (strcmp(app_settings.date_format, "DD.MM.YYYY") == 0) {
+        return "%d.%m.%Y";
+    }
+
+    return "%m-%d";
+}
+
 static void time_update_date_and_day(void) {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
 
-    static char date_buffer[11];
+    static char date_buffer[20];
     static char day_buffer[10];
 
-    strftime(date_buffer, sizeof(date_buffer), "%Y-%m-%d", t);
+    const char *date_format = time_get_date_format();
+    strftime(date_buffer, sizeof(date_buffer), date_format, t);
     strftime(day_buffer, sizeof(day_buffer), "%a", t);
 
     text_layer_set_text(s_date_layer, date_buffer);
