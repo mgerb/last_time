@@ -43,6 +43,7 @@
       "error",
       "config_temperature",
       "config_date_format",
+      "config_date_separator",
       "config_vibrate_disconnect",
       "config_vibrate_top_hour",
       "config_weather_update_interval"

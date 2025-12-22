@@ -6,6 +6,7 @@
 // TODO: create a discriminator
 static bool is_config_message(DictionaryIterator *iterator) {
     return dict_find(iterator, MESSAGE_KEY_config_temperature) || dict_find(iterator, MESSAGE_KEY_config_date_format) ||
+           dict_find(iterator, MESSAGE_KEY_config_date_separator) ||
            dict_find(iterator, MESSAGE_KEY_config_vibrate_disconnect) ||
            dict_find(iterator, MESSAGE_KEY_config_vibrate_top_hour);
 }

@@ -7,6 +7,7 @@ AppSettings app_settings;
 static void settings_set_defaults(void) {
     snprintf(app_settings.temperature, sizeof(app_settings.temperature), "%s", "f");
     snprintf(app_settings.date_format, sizeof(app_settings.date_format), "%s", "MM-DD");
+    snprintf(app_settings.date_separator, sizeof(app_settings.date_separator), "%s", "-");
     app_settings.vibrate_disconnect = true;
     app_settings.vibrate_top_hour = false;
     app_settings.weather_update_interval = 30;
@@ -38,6 +39,10 @@ void settings_update_from_message(DictionaryIterator *iter) {
 
     const Tuple *date_format_tuple = dict_find(iter, MESSAGE_KEY_config_date_format);
     snprintf(app_settings.date_format, sizeof(app_settings.date_format), "%s", date_format_tuple->value->cstring);
+
+    const Tuple *date_separator_tuple = dict_find(iter, MESSAGE_KEY_config_date_separator);
+    snprintf(app_settings.date_separator, sizeof(app_settings.date_separator), "%s",
+             date_separator_tuple->value->cstring);
 
     const Tuple *vibrate_tuple = dict_find(iter, MESSAGE_KEY_config_vibrate_disconnect);
     app_settings.vibrate_disconnect = vibrate_tuple->value->int32 == 1;

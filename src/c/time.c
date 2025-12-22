@@ -59,23 +59,31 @@ static void time_update_ampm(struct tm *time_value) {
 }
 
 static const char *time_get_date_format(void) {
-    if (strcmp(app_settings.date_format, "YYYY-MM-DD") == 0) {
-        return "%Y-%m-%d";
-    }
-    if (strcmp(app_settings.date_format, "MM/DD/YYYY") == 0) {
-        return "%m/%d/%Y";
-    }
-    if (strcmp(app_settings.date_format, "DD/MM/YYYY") == 0) {
-        return "%d/%m/%Y";
-    }
-    if (strcmp(app_settings.date_format, "YYYY/MM/DD") == 0) {
-        return "%Y/%m/%d";
-    }
-    if (strcmp(app_settings.date_format, "DD.MM.YYYY") == 0) {
-        return "%d.%m.%Y";
+    const char *base_format = "%m-%d";
+    const char *format = app_settings.date_format;
+
+    if (strcmp(format, "YYYY-MM-DD") == 0) {
+        base_format = "%Y-%m-%d";
+    } else if (strcmp(format, "MM-DD-YYYY") == 0) {
+        base_format = "%m-%d-%Y";
+    } else if (strcmp(format, "DD-MM-YYYY") == 0) {
+        base_format = "%d-%m-%Y";
     }
 
-    return "%m-%d";
+    char separator = app_settings.date_separator[0];
+    if (separator != '.' && separator != '/' && separator != '-') {
+        separator = '-';
+    }
+
+    static char format_buffer[16];
+    snprintf(format_buffer, sizeof(format_buffer), "%s", base_format);
+    for (size_t i = 0; format_buffer[i] != '\0'; ++i) {
+        if (format_buffer[i] == '-') {
+            format_buffer[i] = separator;
+        }
+    }
+
+    return format_buffer;
 }
 
 static void time_update_date_and_day(void) {

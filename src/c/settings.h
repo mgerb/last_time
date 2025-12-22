@@ -5,6 +5,7 @@
 typedef struct {
     char temperature[16];
     char date_format[16];
+    char date_separator[4];
     bool vibrate_disconnect;
     bool vibrate_top_hour;
     /** In minutes. */
