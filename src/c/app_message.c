@@ -1,23 +1,59 @@
 #include "app_message.h"
+#include "assert.h"
+#include "log.h"
+#include "pebble.h"
+#include "settings.h"
+#include "time.h"
 #include "weather.h"
 
+typedef enum {
+    AM_UNKNOWN = 0,
+    AM_CONFIG = 1,
+    AM_WEATHER = 2,
+} AM_MESSAGE_TYPE;
+
+static AM_MESSAGE_TYPE am_get_message_type(DictionaryIterator *iterator) {
+    if (dict_find(iterator, MESSAGE_KEY_config_temperature)) {
+        return AM_CONFIG;
+    }
+
+    if (dict_find(iterator, MESSAGE_KEY_temperature_f)) {
+        return AM_WEATHER;
+    }
+
+    return AM_UNKNOWN;
+}
+
 static void am_inbox_received_callback(DictionaryIterator *iterator, void *context) {
-    weather_inbox_received_callback(iterator, context);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbox received");
+    AM_MESSAGE_TYPE message_type = am_get_message_type(iterator);
+    LOG_DEBUG("Inbox received, message type: %d", (int)message_type);
+
+    switch (message_type) {
+    case AM_CONFIG:
+        settings_update_from_message(iterator);
+        weather_refresh_temperature();
+        time_update();
+        break;
+    case AM_WEATHER:
+        weather_inbox_received_callback(iterator, context);
+        break;
+    case AM_UNKNOWN:
+        ASSERT(!"This should never happen. You probably modified known message payloads.");
+    }
 }
 
 static void am_inbox_dropped_callback(AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+    LOG_ERROR("Message dropped!");
     weather_request_reset_state();
 }
 
 static void am_outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+    LOG_ERROR("Outbox send failed!");
     weather_request_reset_state();
 }
 
 static void am_outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+    LOG_INFO("Outbox send success!");
 }
 
 void am_init(void) {

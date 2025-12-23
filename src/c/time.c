@@ -1,9 +1,10 @@
 #include "time.h"
+#include "assert.h"
 #include "common.h"
 #include "font.h"
 #include "gcolor_definitions.h"
 #include "pebble.h"
-#include <assert.h>
+#include "settings.h"
 
 static TextLayer *s_time_layer;
 static TextLayer *s_ampm_layer;
@@ -31,7 +32,7 @@ static void format_time(char *buffer, size_t buffer_size, struct tm *time_value)
         return;
     }
 
-    assert(buffer_size >= 2);
+    ASSERT(buffer_size >= 2);
 
     // Trim off leading 0 in 12 hour mode.
     strftime(buffer, buffer_size, "%I:%M", time_value);
@@ -57,14 +58,41 @@ static void time_update_ampm(struct tm *time_value) {
     text_layer_set_text(s_ampm_layer, s_ampm_buffer);
 }
 
+static const char *time_get_date_format(void) {
+    const char *base_format = "%m-%d";
+    const char *format = app_settings.date_format;
+
+    if (strcmp(format, "YYYY-MM-DD") == 0) {
+        base_format = "%Y-%m-%d";
+    } else if (strcmp(format, "MM-DD-YYYY") == 0) {
+        base_format = "%m-%d-%Y";
+    } else if (strcmp(format, "DD-MM-YYYY") == 0) {
+        base_format = "%d-%m-%Y";
+    }
+
+    char separator = app_settings.date_separator[0];
+    ASSERT(separator == '.' || separator == '/' || separator == '-');
+
+    static char format_buffer[16];
+    snprintf(format_buffer, sizeof(format_buffer), "%s", base_format);
+    for (size_t i = 0; format_buffer[i] != '\0'; ++i) {
+        if (format_buffer[i] == '-') {
+            format_buffer[i] = separator;
+        }
+    }
+
+    return format_buffer;
+}
+
 static void time_update_date_and_day(void) {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
 
-    static char date_buffer[11];
+    static char date_buffer[20];
     static char day_buffer[10];
 
-    strftime(date_buffer, sizeof(date_buffer), "%Y-%m-%d", t);
+    const char *date_format = time_get_date_format();
+    strftime(date_buffer, sizeof(date_buffer), date_format, t);
     strftime(day_buffer, sizeof(day_buffer), "%a", t);
 
     text_layer_set_text(s_date_layer, date_buffer);

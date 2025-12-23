@@ -1,31 +1,36 @@
 {
-  "name": "myproject",
-  "author": "MakeAwesomeHappen",
+  "name": "Last Time",
+  "author": "mgerb",
   "version": "1.0.0",
   "keywords": [
     "pebble-app"
   ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "pebble-clay": "^1.0.4"
+  },
   "pebble": {
-    "displayName": "myproject",
+    "displayName": "Last Time",
     "uuid": "bfb3a7e7-4c53-4433-a957-e8b211f9b47c",
     "sdkVersion": "3",
     "enableMultiJS": true,
+    "defines": [
+      "DEBUG"
+    ],
     "targetPlatforms": [
       "aplite",
       "basalt",
       "chalk",
       "diorite",
-      "emery",
-      "flint"
+      "emery"
     ],
     "watchapp": {
       "watchface": true
     },
     "capabilities": [
       "health",
-      "location"
+      "location",
+      "configurable"
     ],
     "messageKeys": [
       "moon_phase",
@@ -38,7 +43,13 @@
       "low_f",
       "sunrise",
       "sunset",
-      "error"
+      "error",
+      "config_temperature",
+      "config_date_format",
+      "config_date_separator",
+      "config_vibrate_disconnect",
+      "config_vibrate_top_hour",
+      "config_weather_update_interval"
     ],
     "resources": {
       "media": [
