@@ -3,6 +3,7 @@
 #include "bluetooth.h"
 #include "common.h"
 #include "font.h"
+#include "log.h"
 #include "moon.h"
 #include "pebble.h"
 #include "settings.h"
@@ -16,7 +17,7 @@
 static int s_last_vibrate_hour = -1;
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "tick handler...");
+    LOG_DEBUG("tick handler...");
     time_update();
 
     if (app_settings.vibrate_top_hour && tick_time->tm_min == 0 && tick_time->tm_hour != s_last_vibrate_hour) {
@@ -92,12 +93,11 @@ static void deinit(void) {
 int main(void) {
     init();
 
-    APP_LOG(APP_LOG_LEVEL_DEBUG,
-            "Done "
-            "initializing"
-            ", pushed "
-            "window: %p",
-            s_window);
+    LOG_DEBUG("Done "
+              "initializing"
+              ", pushed "
+              "window: %p",
+              s_window);
 
     app_event_loop();
     deinit();

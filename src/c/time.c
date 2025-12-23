@@ -1,10 +1,10 @@
 #include "time.h"
+#include "assert.h"
 #include "common.h"
 #include "font.h"
 #include "gcolor_definitions.h"
 #include "pebble.h"
 #include "settings.h"
-#include <assert.h>
 
 static TextLayer *s_time_layer;
 static TextLayer *s_ampm_layer;
@@ -32,7 +32,7 @@ static void format_time(char *buffer, size_t buffer_size, struct tm *time_value)
         return;
     }
 
-    assert(buffer_size >= 2);
+    ASSERT(buffer_size >= 2);
 
     // Trim off leading 0 in 12 hour mode.
     strftime(buffer, buffer_size, "%I:%M", time_value);
@@ -71,9 +71,7 @@ static const char *time_get_date_format(void) {
     }
 
     char separator = app_settings.date_separator[0];
-    if (separator != '.' && separator != '/' && separator != '-') {
-        separator = '-';
-    }
+    ASSERT(separator == '.' || separator == '/' || separator == '-');
 
     static char format_buffer[16];
     snprintf(format_buffer, sizeof(format_buffer), "%s", base_format);

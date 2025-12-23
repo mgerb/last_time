@@ -1,4 +1,5 @@
 #include "bluetooth.h"
+#include "log.h"
 #include "pebble.h"
 #include "settings.h"
 #include "time.h"
@@ -24,7 +25,7 @@ static void bluetooth_connection_handler(bool connected) {
 
     s_bluetooth_connected = connected;
     bluetooth_update_icon();
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "bluetooth_connection_handler: %d", connected);
+    LOG_DEBUG("bluetooth_connection_handler: %d", connected);
 }
 
 void bluetooth_refresh_connected_state(void) {

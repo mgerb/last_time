@@ -3,3 +3,4 @@
 -I/nix/store/s4rdnd3g0kr0r4dikmhgr33z53w6a9p5-source/build/include
 -I/home/mg/git/pebble/myproject/build/aplite
 -DPBL_HEALTH
+-DDEBUG

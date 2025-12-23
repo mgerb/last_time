@@ -1,5 +1,6 @@
 #include "weather.h"
 #include "font.h"
+#include "log.h"
 #include "moon.h"
 #include "settings.h"
 #include "time.h"
@@ -140,7 +141,7 @@ void weather_cache_save(int32_t temperature_f, const char *condition, int32_t we
 bool weather_load_and_apply_cache(void) {
     WeatherCache cache;
     if (!weather_cache_load(&cache) || !weather_cache_is_valid(&cache)) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "weather cache is not valid");
+        LOG_DEBUG("weather cache is not valid");
         return false;
     }
 
@@ -161,7 +162,7 @@ void weather_send_request(void) {
     AppMessageResult result = app_message_outbox_begin(&iter);
 
     if (result != APP_MSG_OK) {
-        APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox begin failed: %d", (int)result);
+        LOG_ERROR("Outbox begin failed: %d", (int)result);
         weather_cache_invalidate();
         weather_request_reset_state();
         return;
@@ -171,7 +172,7 @@ void weather_send_request(void) {
 
     result = app_message_outbox_send();
     if (result != APP_MSG_OK) {
-        APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed: %d", (int)result);
+        LOG_ERROR("Outbox send failed: %d", (int)result);
         weather_cache_invalidate();
         weather_request_reset_state();
         return;
@@ -187,12 +188,11 @@ void weather_request_if_needed(void) {
     bool cache_valid = has_cache && weather_cache_is_valid(&cache);
 
     if (weather_request_has_timed_out()) {
-        APP_LOG(APP_LOG_LEVEL_WARNING, "Weather request timed out; resetting request state");
+        LOG_WARN("Weather request timed out; resetting request state");
         weather_request_reset_state();
     }
 
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "cache_valid: %d, s_weather_request_in_progress: %d", cache_valid,
-            s_weather_request_in_progress);
+    LOG_DEBUG("cache_valid: %d, s_weather_request_in_progress: %d", cache_valid, s_weather_request_in_progress);
     if (!cache_valid && !s_weather_request_in_progress) {
         weather_send_request();
     }
@@ -200,8 +200,7 @@ void weather_request_if_needed(void) {
 
 bool weather_is_night(void) {
     time_t now = time(NULL);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "now: %d, sunrise: %d, sunset: %d", (int)now, (int)weather_sunrise,
-            (int)weather_sunset);
+    LOG_DEBUG("now: %d, sunrise: %d, sunset: %d", (int)now, (int)weather_sunrise, (int)weather_sunset);
     // We only show sunrise/sunset times in the future, so it
     // should always be night when the next sunrise is before the next sunset.
     return weather_sunrise < weather_sunset;
@@ -260,7 +259,7 @@ void weather_update_condition_icon(void) {
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
     Tuple *error_tuple = dict_find(iterator, MESSAGE_KEY_error);
     if (error_tuple) {
-        APP_LOG(APP_LOG_LEVEL_ERROR, "Weather request failed on phone: %ld", (long)error_tuple->value->int32);
+        LOG_ERROR("Weather request failed on phone: %ld", (long)error_tuple->value->int32);
         weather_cache_invalidate();
         weather_request_reset_state();
         return;
