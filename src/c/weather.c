@@ -7,10 +7,6 @@
 
 #include <limits.h>
 
-#define WEATHER_CACHE_KEY 1
-#define WEATHER_CACHE_CONDITION_LEN 20
-#define WEATHER_REQUEST_TIMEOUT_SECONDS 30
-
 static TextLayer *s_weather_layer_icon;
 static TextLayer *s_condition_layer;
 static TextLayer *s_temperature_layer;
@@ -23,16 +19,6 @@ int32_t weather_sunrise = 0;
 int32_t weather_sunset = 0;
 
 static const int WEATHER_GAP = 2;
-
-typedef struct {
-    int32_t temperature_f;
-    char condition[WEATHER_CACHE_CONDITION_LEN];
-    time_t timestamp;
-    int32_t weather_code;
-    int32_t sunrise;
-    int32_t sunset;
-    int32_t moon_phase;
-} WeatherCache;
 
 static bool s_weather_request_in_progress = false;
 static time_t s_weather_request_started_at = 0;
@@ -163,7 +149,6 @@ void weather_send_request(void) {
 
     if (result != APP_MSG_OK) {
         LOG_ERROR("Outbox begin failed: %d", (int)result);
-        weather_cache_invalidate();
         weather_request_reset_state();
         return;
     }
@@ -173,7 +158,6 @@ void weather_send_request(void) {
     result = app_message_outbox_send();
     if (result != APP_MSG_OK) {
         LOG_ERROR("Outbox send failed: %d", (int)result);
-        weather_cache_invalidate();
         weather_request_reset_state();
         return;
     }
@@ -182,7 +166,7 @@ void weather_send_request(void) {
     s_weather_request_in_progress = true;
 }
 
-void weather_request_if_needed(void) {
+static void weather_request_if_needed(void) {
     WeatherCache cache;
     bool has_cache = weather_cache_load(&cache);
     bool cache_valid = has_cache && weather_cache_is_valid(&cache);
@@ -252,16 +236,19 @@ char *weather_get_condition_icon(void) {
     }
 }
 
-void weather_update_condition_icon(void) {
+/**
+ * Update the weather icon in the tick handler, because
+ * it changes based on day/night.
+ */
+static void weather_update_condition_icon(void) {
     text_layer_set_text(s_weather_layer_icon, weather_get_condition_icon());
 }
 
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
+    weather_request_reset_state();
     Tuple *error_tuple = dict_find(iterator, MESSAGE_KEY_error);
     if (error_tuple) {
         LOG_ERROR("Weather request failed on phone: %ld", (long)error_tuple->value->int32);
-        weather_cache_invalidate();
-        weather_request_reset_state();
         return;
     }
 
@@ -288,7 +275,6 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
 
     weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, weather_sunrise,
                        weather_sunset, s_moon_phase);
-    weather_request_reset_state();
 }
 
 void weather_load(Window *window) {
@@ -332,4 +318,9 @@ void weather_unload(void) {
     text_layer_destroy(s_condition_layer);
     text_layer_destroy(s_temperature_layer);
     text_layer_destroy(s_weather_layer_icon);
+}
+
+void weather_tick_handler(void) {
+    weather_request_if_needed();
+    weather_update_condition_icon();
 }
