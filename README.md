@@ -13,3 +13,7 @@ The last Pebble watch face you'll ever need.
 - Sunrise
 - Sunset
 - Moonphase (icon for each phase)
+
+# TODO:
+
+- emery - pebble time 2

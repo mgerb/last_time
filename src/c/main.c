@@ -25,8 +25,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
         s_last_vibrate_hour = tick_time->tm_hour;
     }
 
-    weather_request_if_needed();
-    weather_update_condition_icon();
+    weather_tick_handler();
 }
 
 void load_top_right(Window *window) {
@@ -38,7 +37,6 @@ void load_top_right(Window *window) {
 }
 
 static void window_load(Window *window) {
-    // Load UI things.
     font_load();
     time_load(window);
     moon_load(window);
