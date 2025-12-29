@@ -4,7 +4,7 @@
 
 #define LOG_ERROR(...) APP_LOG(APP_LOG_LEVEL_ERROR, __VA_ARGS__)
 
-// Debug-only logging; stripped in release builds.
+// Debug-only logging. Removed in release builds.
 #ifdef DEBUG
 #define LOG_DEBUG(...) APP_LOG(APP_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define LOG_INFO(...) APP_LOG(APP_LOG_LEVEL_INFO, __VA_ARGS__)
