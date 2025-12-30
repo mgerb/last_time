@@ -1,7 +1,7 @@
 const suncalc = require("./suncalc");
 
 // Import the Clay package
-var Clay = require("pebble-clay");
+var Clay = require("@rebble/clay");
 // Load our Clay configuration file
 var clayConfig = require("./config");
 // Initialize Clay
