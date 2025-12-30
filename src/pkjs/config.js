@@ -6,7 +6,7 @@ module.exports = [
   {
     type: "text",
     defaultValue:
-      "The last watch face you'll ever need.\n\nhttps://github.com/mgerb/last_time"
+      "A multifunctional Pebble watchface.\n\nhttps://github.com/mgerb/last_time"
   },
   {
     type: "section",
