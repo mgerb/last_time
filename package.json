@@ -6,19 +6,16 @@
     "pebble-app"
   ],
   "private": true,
-  "dependencies": {
-    "pebble-clay": "^1.0.4"
-  },
   "pebble": {
     "displayName": "Last Time",
     "uuid": "bfb3a7e7-4c53-4433-a957-e8b211f9b47c",
     "sdkVersion": "3",
     "enableMultiJS": true,
-    "defines": [
-      "DEBUG"
-    ],
     "targetPlatforms": [
-      "diorite"
+      "aplite",
+      "basalt",
+      "diorite",
+      "flint"
     ],
     "watchapp": {
       "watchface": true
@@ -98,5 +95,8 @@
         }
       ]
     }
+  },
+  "dependencies": {
+    "@rebble/clay": "^1.0.6"
   }
 }
