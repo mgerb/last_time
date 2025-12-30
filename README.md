@@ -1,5 +1,10 @@
 <h1 align="center">Last Time</h1>
 <p align="center">A multifunctional Pebble watchface.</p>
+<p align="center">
+    <a href="https://apps.rebble.io/en_US/application/6953664f91ea9d0009ebd734">
+        https://apps.rebble.io/en_US/application/6953664f91ea9d0009ebd734
+    </a>
+</p>
 
 <p align="center">
     <img src="./readme/last_time.png" alt="Description">
@@ -21,7 +26,7 @@
 - Vibrate on the hour
 - UTC time
 - Sunrise/sunset
-  - Displays the next upcoming sunrise/sunset times.
+  - Displays the upcoming sunrise/sunset times.
     For example, if the current time is a few minutes
     past sunset, then the sunset time displayed will
     be for the following day.
