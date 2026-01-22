@@ -47,6 +47,12 @@
     "resources": {
       "media": [
         {
+          "menuIcon": true,
+          "type": "bitmap",
+          "name": "IMAGE_MENU_ICON",
+          "file": "icons/last_time_icon.png"
+        },
+        {
           "type": "font",
           "name": "FONT_ICONS_18",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
