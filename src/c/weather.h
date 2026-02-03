@@ -3,13 +3,9 @@
 #include "common.h"
 #include "pebble.h"
 
-#define WEATHER_CACHE_KEY 1
-#define WEATHER_CACHE_CONDITION_LEN 20
-#define WEATHER_REQUEST_TIMEOUT_SECONDS 30
-
 typedef struct {
     int32_t temperature_f;
-    char condition[WEATHER_CACHE_CONDITION_LEN];
+    char condition[20];
     time_t timestamp;
     int32_t weather_code;
     int32_t sunrise;
@@ -18,7 +14,7 @@ typedef struct {
 } WeatherCache;
 
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context);
-void weather_request_reset_state(void);
+void weather_set_request_in_progress(bool in_progress);
 void weather_refresh_temperature(void);
 void weather_load(Window *window);
 void weather_unload(void);

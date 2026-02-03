@@ -37,6 +37,7 @@
       "sunrise",
       "sunset",
       "error",
+      "type_weather",
       "config_temperature",
       "config_date_format",
       "config_date_separator",

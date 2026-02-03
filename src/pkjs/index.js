@@ -80,7 +80,7 @@ function weatherCodeToText(code) {
 
 function notifyWatchOfError(code) {
   Pebble.sendAppMessage(
-    { error: code || ERRORS.unknown },
+    { type_weather: 1, error: code || ERRORS.unknown },
     function (e) {
       console.log("Sent error to watch", e);
     },
@@ -171,6 +171,7 @@ function locationSuccess(pos) {
     var nextSunset = now < sunsetToday ? sunsetToday : sunsetTomorrow;
 
     var weatherData = {
+      type_weather: 1,
       temperature_f,
       condition,
       weather_code,
