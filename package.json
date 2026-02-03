@@ -1,7 +1,7 @@
 {
   "name": "Last Time",
   "author": "mgerb",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "keywords": [
     "pebble-app"
   ],
@@ -42,7 +42,8 @@
       "config_date_separator",
       "config_vibrate_disconnect",
       "config_vibrate_top_hour",
-      "config_weather_update_interval"
+      "config_weather_update_interval",
+      "config_show_steps"
     ],
     "resources": {
       "media": [

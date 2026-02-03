@@ -8,6 +8,7 @@ typedef struct {
     char date_separator[4];
     bool vibrate_disconnect;
     bool vibrate_top_hour;
+    bool show_steps;
     /** In minutes. */
     uint32_t weather_update_interval;
 } AppSettings;
