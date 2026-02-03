@@ -10,6 +10,7 @@ static void settings_set_defaults(void) {
     snprintf(app_settings.date_separator, sizeof(app_settings.date_separator), "%s", "-");
     app_settings.vibrate_disconnect = true;
     app_settings.vibrate_top_hour = false;
+    app_settings.show_steps = true;
     app_settings.weather_update_interval = 30;
 }
 
@@ -49,6 +50,9 @@ void settings_update_from_message(DictionaryIterator *iter) {
 
     const Tuple *vibrate_top_hour_tuple = dict_find(iter, MESSAGE_KEY_config_vibrate_top_hour);
     app_settings.vibrate_top_hour = vibrate_top_hour_tuple->value->int32 == 1;
+
+    const Tuple *show_steps_tuple = dict_find(iter, MESSAGE_KEY_config_show_steps);
+    app_settings.show_steps = show_steps_tuple->value->int32 == 1;
 
     const Tuple *weather_update_interval_tuple = dict_find(iter, MESSAGE_KEY_config_weather_update_interval);
     app_settings.weather_update_interval = weather_update_interval_tuple->value->int32;

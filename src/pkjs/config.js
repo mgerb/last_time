@@ -5,8 +5,16 @@ module.exports = [
   },
   {
     type: "text",
+    defaultValue: "A multifunctional Pebble watchface."
+  },
+  {
+    type: "text",
+    defaultValue: "https://github.com/mgerb/last_time"
+  },
+  {
+    type: "text",
     defaultValue:
-      "A multifunctional Pebble watchface.\n\nhttps://github.com/mgerb/last_time"
+      "If you encounter a bug, please open a new issue on the Github page."
   },
   {
     type: "section",
@@ -92,6 +100,14 @@ module.exports = [
         min: 1,
         max: 60,
         step: 1
+      },
+      {
+        type: "toggle",
+        messageKey: "config_show_steps",
+        label: "Show steps (requires health)",
+        defaultValue: true,
+        description:
+          "Disable this if you get popups due to health being disabled."
       }
     ]
   },

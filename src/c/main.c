@@ -32,7 +32,9 @@ void load_top_right(Window *window) {
     int row_height = 14;
     battery_load(window, row_height);
 #if defined(PBL_HEALTH)
-    health_load(window, row_height);
+    if (app_settings.show_steps) {
+        health_load(window, row_height);
+    }
 #endif
 }
 
@@ -53,7 +55,9 @@ static void window_unload(Window *window) {
     bluetooth_unload();
     battery_unload();
 #if defined(PBL_HEALTH)
-    health_unload();
+    if (app_settings.show_steps) {
+        health_unload();
+    }
 #endif
     font_unload();
 }
@@ -72,7 +76,9 @@ static void init(void) {
     battery_init();
     bluetooth_init();
 #if defined(PBL_HEALTH)
-    health_init();
+    if (app_settings.show_steps) {
+        health_init();
+    }
 #endif
 
     am_init();
@@ -82,7 +88,9 @@ static void deinit(void) {
     bluetooth_deinit();
     battery_deinit();
 #if defined(PBL_HEALTH)
-    health_deinit();
+    if (app_settings.show_steps) {
+        health_deinit();
+    }
 #endif
     tick_timer_service_unsubscribe();
     window_destroy(s_window);
