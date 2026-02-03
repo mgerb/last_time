@@ -18,7 +18,6 @@ typedef struct {
 } WeatherCache;
 
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context);
-void weather_request_reset_state(void);
 void weather_refresh_temperature(void);
 void weather_load(Window *window);
 void weather_unload(void);

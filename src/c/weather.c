@@ -20,9 +20,6 @@ int32_t weather_sunset = 0;
 
 static const int WEATHER_GAP = 2;
 
-static bool s_weather_request_in_progress = false;
-static time_t s_weather_request_started_at = 0;
-
 static bool weather_cache_load(WeatherCache *cache);
 
 static void weather_cache_invalidate(void) {
@@ -78,20 +75,6 @@ void weather_refresh_temperature(void) {
     weather_position_icon();
 }
 
-void weather_request_reset_state(void) {
-    s_weather_request_in_progress = false;
-    s_weather_request_started_at = 0;
-}
-
-bool weather_request_has_timed_out(void) {
-    if (!s_weather_request_in_progress || s_weather_request_started_at == 0) {
-        return false;
-    }
-
-    time_t now = time(NULL);
-    return difftime(now, s_weather_request_started_at) > WEATHER_REQUEST_TIMEOUT_SECONDS;
-}
-
 bool weather_cache_load(WeatherCache *cache) {
     if (!persist_exists(WEATHER_CACHE_KEY)) {
         return false;
@@ -104,7 +87,13 @@ bool weather_cache_load(WeatherCache *cache) {
 bool weather_cache_is_valid(const WeatherCache *cache) {
     time_t now = time(NULL);
     int32_t ttl_seconds = (int32_t)app_settings.weather_update_interval * 60;
-    return difftime(now, cache->timestamp) < ttl_seconds;
+    double age_seconds = difftime(now, cache->timestamp);
+    if (age_seconds < 0) {
+        LOG_WARN("Weather cache timestamp is in the future. Invalidating.");
+        return false;
+    }
+
+    return age_seconds < ttl_seconds;
 }
 
 void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code, int32_t sunrise,
@@ -149,7 +138,6 @@ void weather_send_request(void) {
 
     if (result != APP_MSG_OK) {
         LOG_ERROR("Outbox begin failed: %d", (int)result);
-        weather_request_reset_state();
         return;
     }
 
@@ -158,12 +146,8 @@ void weather_send_request(void) {
     result = app_message_outbox_send();
     if (result != APP_MSG_OK) {
         LOG_ERROR("Outbox send failed: %d", (int)result);
-        weather_request_reset_state();
         return;
     }
-
-    s_weather_request_started_at = time(NULL);
-    s_weather_request_in_progress = true;
 }
 
 static void weather_request_if_needed(void) {
@@ -171,14 +155,11 @@ static void weather_request_if_needed(void) {
     bool has_cache = weather_cache_load(&cache);
     bool cache_valid = has_cache && weather_cache_is_valid(&cache);
 
-    if (weather_request_has_timed_out()) {
-        LOG_WARN("Weather request timed out; resetting request state");
-        weather_request_reset_state();
-    }
-
-    LOG_DEBUG("cache_valid: %d, s_weather_request_in_progress: %d", cache_valid, s_weather_request_in_progress);
-    if (!cache_valid && !s_weather_request_in_progress) {
+    if (!cache_valid) {
+        LOG_DEBUG("Weather cache is invalid; sending weather request.");
         weather_send_request();
+    } else {
+        LOG_DEBUG("Weather cache is valid; skipping weather request.");
     }
 }
 
@@ -245,7 +226,6 @@ static void weather_update_condition_icon(void) {
 }
 
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
-    weather_request_reset_state();
     Tuple *error_tuple = dict_find(iterator, MESSAGE_KEY_error);
     if (error_tuple) {
         LOG_ERROR("Weather request failed on phone: %ld", (long)error_tuple->value->int32);
