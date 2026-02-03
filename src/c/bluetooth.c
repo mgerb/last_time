@@ -3,6 +3,7 @@
 #include "pebble.h"
 #include "settings.h"
 #include "time.h"
+#include "weather.h"
 
 static TextLayer *s_bluetooth_layer_icon;
 static bool s_bluetooth_connected = false;
@@ -25,6 +26,9 @@ static void bluetooth_connection_handler(bool connected) {
 
     s_bluetooth_connected = connected;
     bluetooth_update_icon();
+    if (connected) {
+        weather_request_if_needed();
+    }
     LOG_DEBUG("bluetooth_connection_handler: %d", connected);
 }
 

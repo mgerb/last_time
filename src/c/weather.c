@@ -104,7 +104,13 @@ bool weather_cache_load(WeatherCache *cache) {
 bool weather_cache_is_valid(const WeatherCache *cache) {
     time_t now = time(NULL);
     int32_t ttl_seconds = (int32_t)app_settings.weather_update_interval * 60;
-    return difftime(now, cache->timestamp) < ttl_seconds;
+    double age_seconds = difftime(now, cache->timestamp);
+    if (age_seconds < 0) {
+        LOG_WARN("Weather cache timestamp is in the future. Invalidating.");
+        return false;
+    }
+
+    return age_seconds < ttl_seconds;
 }
 
 void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code, int32_t sunrise,
@@ -166,7 +172,7 @@ void weather_send_request(void) {
     s_weather_request_in_progress = true;
 }
 
-static void weather_request_if_needed(void) {
+void weather_request_if_needed(void) {
     WeatherCache cache;
     bool has_cache = weather_cache_load(&cache);
     bool cache_valid = has_cache && weather_cache_is_valid(&cache);
