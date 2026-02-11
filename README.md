@@ -93,3 +93,12 @@
 | WNC4         | Waning Crescent (4) | ![](readme/moon/WNC4.png) |
 | WNC5         | Waning Crescent (5) | ![](readme/moon/WNC5.png) |
 | WNC6         | Waning Crescent (6) | ![](readme/moon/WNC6.png) |
+
+## Publishing a new release
+
+- Update the "version" in `package.json`
+- Commit and tag the new version. Only update the major/minor versions. Seems
+  like Pebble does not support patch versions.
+  - e.g. `git commit -m "v1.2.0 && git tag v1.2.0`
+- `pebble clean && ./build-release.sh`
+- Draft a new release and upload `./build/last_time.pbw` via web UI
