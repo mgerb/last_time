@@ -1,13 +1,18 @@
 <h1 align="center">Last Time</h1>
 <p align="center">A multifunctional Pebble watchface.</p>
-<p align="center">
-    <a href="https://apps.rebble.io/en_US/application/6953664f91ea9d0009ebd734">
-        https://apps.rebble.io/en_US/application/6953664f91ea9d0009ebd734
-    </a>
-</p>
 
 <p align="center">
     <img src="./readme/last_time.png" alt="Description">
+</p>
+
+<p align="center">
+    <b>App Store</b>
+    <br/>
+    <a href="https://apps.repebble.com/last-time_1f224e24fc2a4938a84d7f70">
+        Pebble
+    </a> | <a href="https://apps.rebble.io/en_US/application/6953664f91ea9d0009ebd734">
+        Rebble
+    </a>
 </p>
 
 ## Features
@@ -93,3 +98,12 @@
 | WNC4         | Waning Crescent (4) | ![](readme/moon/WNC4.png) |
 | WNC5         | Waning Crescent (5) | ![](readme/moon/WNC5.png) |
 | WNC6         | Waning Crescent (6) | ![](readme/moon/WNC6.png) |
+
+## Publishing a new release
+
+- Update the "version" in `package.json`
+- Commit and tag the new version. Only update the major/minor versions. Seems
+  like Pebble does not support patch versions.
+  - e.g. `git commit -m "v1.2.0" && git tag v1.2.0`
+- `pebble clean && ./build-release.sh`
+- Draft a new release and upload `./build/last_time.pbw` via web UI

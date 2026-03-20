@@ -6,13 +6,22 @@
 #include "time.h"
 #include "weather.h"
 
+static bool am_is_clay_message(DictionaryIterator *iterator) {
+    return dict_find(iterator, MESSAGE_KEY_config_temperature) || dict_find(iterator, MESSAGE_KEY_config_date_format) ||
+           dict_find(iterator, MESSAGE_KEY_config_date_separator) ||
+           dict_find(iterator, MESSAGE_KEY_config_vibrate_disconnect) ||
+           dict_find(iterator, MESSAGE_KEY_config_vibrate_top_hour) ||
+           dict_find(iterator, MESSAGE_KEY_config_weather_update_interval) ||
+           dict_find(iterator, MESSAGE_KEY_config_show_steps);
+}
+
 static AM_MESSAGE_TYPE am_get_message_type(DictionaryIterator *iterator) {
-    if (dict_find(iterator, MESSAGE_KEY_config_temperature)) {
-        return AM_CONFIG;
+    if (dict_find(iterator, MESSAGE_KEY_type_weather)) {
+        return AM_WEATHER;
     }
 
-    if (dict_find(iterator, MESSAGE_KEY_temperature_f)) {
-        return AM_WEATHER;
+    if (am_is_clay_message(iterator)) {
+        return AM_CONFIG;
     }
 
     return AM_UNKNOWN;
@@ -39,13 +48,13 @@ static void am_inbox_received_callback(DictionaryIterator *iterator, void *conte
 }
 
 static void am_inbox_dropped_callback(AppMessageResult reason, void *context) {
-    LOG_ERROR("Message dropped!");
-    weather_request_reset_state();
+    LOG_ERROR("Message dropped! Reason: %d", (int)reason);
+    weather_set_request_in_progress(false);
 }
 
 static void am_outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-    LOG_ERROR("Outbox send failed!");
-    weather_request_reset_state();
+    LOG_ERROR("Outbox send failed! Reason: %d", (int)reason);
+    weather_set_request_in_progress(false);
 }
 
 static void am_outbox_sent_callback(DictionaryIterator *iterator, void *context) {

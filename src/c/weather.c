@@ -7,32 +7,48 @@
 
 #include <limits.h>
 
+#define WEATHER_CACHE_KEY 1
+#define WEATHER_REQUEST_TIMEOUT_SECONDS 30
+
 static TextLayer *s_weather_layer_icon;
 static TextLayer *s_condition_layer;
 static TextLayer *s_temperature_layer;
+#ifdef DEBUG
+static TextLayer *s_weather_updated_layer;
+#endif
 
 static char s_condition_buffer[20] = "--";
 static int32_t s_weather_code = -1;
 static int32_t s_moon_phase = -1;
 static int32_t s_temperature_f = INT32_MIN;
+static time_t s_weather_updated_at = 0;
 int32_t weather_sunrise = 0;
 int32_t weather_sunset = 0;
-
-static const int WEATHER_GAP = 2;
-
 static bool s_weather_request_in_progress = false;
 static time_t s_weather_request_started_at = 0;
 
+static const int WEATHER_GAP = 2;
+
 static bool weather_cache_load(WeatherCache *cache);
 
-static void weather_cache_invalidate(void) {
-    WeatherCache cache;
-    if (!weather_cache_load(&cache)) {
-        return;
+void weather_set_request_in_progress(bool in_progress) {
+    s_weather_request_in_progress = in_progress;
+    s_weather_request_started_at = in_progress ? time(NULL) : 0;
+}
+
+static bool weather_request_has_timed_out(void) {
+    if (!s_weather_request_in_progress) {
+        return false;
     }
 
-    cache.timestamp = 0;
-    persist_write_data(WEATHER_CACHE_KEY, &cache, sizeof(cache));
+    double age_seconds = difftime(time(NULL), s_weather_request_started_at);
+    if (age_seconds < WEATHER_REQUEST_TIMEOUT_SECONDS) {
+        return false;
+    }
+
+    LOG_WARN("Weather request timed out after %d seconds.", WEATHER_REQUEST_TIMEOUT_SECONDS);
+    weather_set_request_in_progress(false);
+    return true;
 }
 
 static void weather_position_icon(void) {
@@ -40,7 +56,7 @@ static void weather_position_icon(void) {
         return;
     }
 
-    // Place the icon immediately to the right of the temperature text with a fixed gap.
+    // Place the icon immediately to the right of the temperature with a fixed gap.
     GSize temp_size = text_layer_get_content_size(s_temperature_layer);
     Layer *temp_layer = text_layer_get_layer(s_temperature_layer);
     GRect temp_frame = layer_get_frame(temp_layer);
@@ -78,19 +94,31 @@ void weather_refresh_temperature(void) {
     weather_position_icon();
 }
 
-void weather_request_reset_state(void) {
-    s_weather_request_in_progress = false;
-    s_weather_request_started_at = 0;
-}
-
-bool weather_request_has_timed_out(void) {
-    if (!s_weather_request_in_progress || s_weather_request_started_at == 0) {
-        return false;
+// This is for the weather updated timestamp. Only shown in debug mode.
+#ifdef DEBUG
+static void weather_refresh_updated_at(void) {
+    if (!s_weather_updated_layer) {
+        return;
     }
 
-    time_t now = time(NULL);
-    return difftime(now, s_weather_request_started_at) > WEATHER_REQUEST_TIMEOUT_SECONDS;
+    static char buffer[16];
+    size_t buffer_size = sizeof(buffer);
+    if (s_weather_updated_at == 0) {
+        snprintf(buffer, buffer_size, "%s", "--:--");
+        return;
+    }
+
+    struct tm *updated_time = localtime(&s_weather_updated_at);
+
+    if (clock_is_24h_style()) {
+        strftime(buffer, buffer_size, "%H:%M", updated_time);
+    } else {
+        strftime(buffer, buffer_size, "%I:%M", updated_time);
+    }
+
+    text_layer_set_text(s_weather_updated_layer, buffer);
 }
+#endif
 
 bool weather_cache_load(WeatherCache *cache) {
     if (!persist_exists(WEATHER_CACHE_KEY)) {
@@ -104,7 +132,13 @@ bool weather_cache_load(WeatherCache *cache) {
 bool weather_cache_is_valid(const WeatherCache *cache) {
     time_t now = time(NULL);
     int32_t ttl_seconds = (int32_t)app_settings.weather_update_interval * 60;
-    return difftime(now, cache->timestamp) < ttl_seconds;
+    double age_seconds = difftime(now, cache->timestamp);
+    if (age_seconds < 0) {
+        LOG_WARN("Weather cache timestamp is in the future. Invalidating.");
+        return false;
+    }
+
+    return age_seconds < ttl_seconds;
 }
 
 void weather_cache_save(int32_t temperature_f, const char *condition, int32_t weather_code, int32_t sunrise,
@@ -119,6 +153,7 @@ void weather_cache_save(int32_t temperature_f, const char *condition, int32_t we
     };
     snprintf(cache.condition, sizeof(cache.condition), "%s", condition);
     persist_write_data(WEATHER_CACHE_KEY, &cache, sizeof(cache));
+    s_weather_updated_at = cache.timestamp;
 }
 
 /**
@@ -128,6 +163,7 @@ bool weather_load_and_apply_cache(void) {
     WeatherCache cache;
     if (!weather_cache_load(&cache) || !weather_cache_is_valid(&cache)) {
         LOG_DEBUG("weather cache is not valid");
+        s_weather_updated_at = 0;
         return false;
     }
 
@@ -137,6 +173,7 @@ bool weather_load_and_apply_cache(void) {
     weather_sunrise = cache.sunrise;
     weather_sunset = cache.sunset;
     s_moon_phase = cache.moon_phase;
+    s_weather_updated_at = cache.timestamp;
     return true;
 }
 
@@ -149,7 +186,6 @@ void weather_send_request(void) {
 
     if (result != APP_MSG_OK) {
         LOG_ERROR("Outbox begin failed: %d", (int)result);
-        weather_request_reset_state();
         return;
     }
 
@@ -158,28 +194,28 @@ void weather_send_request(void) {
     result = app_message_outbox_send();
     if (result != APP_MSG_OK) {
         LOG_ERROR("Outbox send failed: %d", (int)result);
-        weather_request_reset_state();
         return;
     }
 
-    s_weather_request_started_at = time(NULL);
-    s_weather_request_in_progress = true;
+    weather_set_request_in_progress(true);
 }
 
 static void weather_request_if_needed(void) {
     WeatherCache cache;
-    bool has_cache = weather_cache_load(&cache);
-    bool cache_valid = has_cache && weather_cache_is_valid(&cache);
+    bool cache_valid = weather_cache_load(&cache) && weather_cache_is_valid(&cache);
 
-    if (weather_request_has_timed_out()) {
-        LOG_WARN("Weather request timed out; resetting request state");
-        weather_request_reset_state();
+    if (cache_valid) {
+        LOG_DEBUG("Weather cache is valid. Skipping weather request.");
+        return;
     }
 
-    LOG_DEBUG("cache_valid: %d, s_weather_request_in_progress: %d", cache_valid, s_weather_request_in_progress);
-    if (!cache_valid && !s_weather_request_in_progress) {
-        weather_send_request();
+    if (s_weather_request_in_progress && !weather_request_has_timed_out()) {
+        LOG_DEBUG("Weather cache is invalid, but a request is already in progress.");
+        return;
     }
+
+    LOG_DEBUG("Weather cache is invalid. Sending weather request.");
+    weather_send_request();
 }
 
 bool weather_is_night(void) {
@@ -241,14 +277,18 @@ char *weather_get_condition_icon(void) {
  * it changes based on day/night.
  */
 static void weather_update_condition_icon(void) {
+    if (!s_weather_layer_icon) {
+        return;
+    }
+
     text_layer_set_text(s_weather_layer_icon, weather_get_condition_icon());
 }
 
 void weather_inbox_received_callback(DictionaryIterator *iterator, void *context) {
-    weather_request_reset_state();
     Tuple *error_tuple = dict_find(iterator, MESSAGE_KEY_error);
     if (error_tuple) {
         LOG_ERROR("Weather request failed on phone: %ld", (long)error_tuple->value->int32);
+        weather_set_request_in_progress(false);
         return;
     }
 
@@ -275,6 +315,10 @@ void weather_inbox_received_callback(DictionaryIterator *iterator, void *context
 
     weather_cache_save(temp_tuple->value->int32, condition_tuple->value->cstring, s_weather_code, weather_sunrise,
                        weather_sunset, s_moon_phase);
+#ifdef DEBUG
+    weather_refresh_updated_at();
+#endif
+    weather_set_request_in_progress(false);
 }
 
 void weather_load(Window *window) {
@@ -295,6 +339,18 @@ void weather_load(Window *window) {
     text_layer_set_text_alignment(s_temperature_layer, GTextAlignmentLeft);
     weather_refresh_temperature();
     layer_add_child(window_layer, text_layer_get_layer(s_temperature_layer));
+
+#ifdef DEBUG
+    // In debug mode, render a timestamp of the last time the weather was updated.
+    s_weather_updated_layer =
+        text_layer_create(GRect(PADDING_X, temperature_row_height + 2, bounds.size.w, conditions_row_height));
+    text_layer_set_font(s_weather_updated_layer, s_font_primary_small);
+    text_layer_set_text_color(s_weather_updated_layer, THEME.text_color);
+    text_layer_set_background_color(s_weather_updated_layer, GColorClear);
+    text_layer_set_text_alignment(s_weather_updated_layer, GTextAlignmentLeft);
+    weather_refresh_updated_at();
+    layer_add_child(window_layer, text_layer_get_layer(s_weather_updated_layer));
+#endif
 
     // Weather icon sits to the right of the temperature.
     s_weather_layer_icon =
@@ -318,6 +374,13 @@ void weather_unload(void) {
     text_layer_destroy(s_condition_layer);
     text_layer_destroy(s_temperature_layer);
     text_layer_destroy(s_weather_layer_icon);
+#ifdef DEBUG
+    text_layer_destroy(s_weather_updated_layer);
+    s_weather_updated_layer = NULL;
+#endif
+    s_condition_layer = NULL;
+    s_temperature_layer = NULL;
+    s_weather_layer_icon = NULL;
 }
 
 void weather_tick_handler(void) {
