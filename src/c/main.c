@@ -29,7 +29,11 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 void load_top_right(Window *window) {
+#if defined(PBL_PLATFORM_EMERY)
+    int row_height = 22;
+#else
     int row_height = 14;
+#endif
     battery_load(window, row_height);
 #if defined(PBL_HEALTH)
     if (app_settings.show_steps) {

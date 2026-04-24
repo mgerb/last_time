@@ -81,7 +81,7 @@ void weather_refresh_temperature(void) {
         return;
     }
 
-    static char buffer[8] = "--";
+    static char buffer[16] = "--";
     if (s_temperature_f != INT32_MIN) {
         int32_t display_temp =
             app_settings.temperature[0] == 'c' ? weather_convert_f_to_c(s_temperature_f) : s_temperature_f;
@@ -219,8 +219,7 @@ static void weather_request_if_needed(void) {
 }
 
 bool weather_is_night(void) {
-    time_t now = time(NULL);
-    LOG_DEBUG("now: %d, sunrise: %d, sunset: %d", (int)now, (int)weather_sunrise, (int)weather_sunset);
+    LOG_DEBUG("now: %d, sunrise: %d, sunset: %d", (int)time(NULL), (int)weather_sunrise, (int)weather_sunset);
     // We only show sunrise/sunset times in the future, so it
     // should always be night when the next sunrise is before the next sunset.
     return weather_sunrise < weather_sunset;
@@ -328,8 +327,13 @@ void weather_load(Window *window) {
     moon_update(s_moon_phase);
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
+#if defined(PBL_PLATFORM_EMERY)
+    int temperature_row_height = 33;
+    int conditions_row_height = 25;
+#else
     int temperature_row_height = 24;
     int conditions_row_height = 16;
+#endif
 
     // Temperature text (top-left).
     s_temperature_layer = text_layer_create(GRect(PADDING_X, 2, 80, temperature_row_height));

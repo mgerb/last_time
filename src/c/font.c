@@ -52,6 +52,23 @@ static TextLayer *font_render_icon(Layer *container_layer, GFont font, const cha
 }
 
 void font_load(void) {
+#if defined(PBL_PLATFORM_EMERY)
+    s_font_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_21));
+
+    // Specific fonts with limited characters.
+    s_font_temperature = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_33));
+    s_font_am_pm = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_15));
+
+    // Time font.
+    s_font_time_large = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DSEG_58));
+
+    // Nerd font icons. See fonts in package.json. Using Lilex nerd fonts because
+    // icons just did not render right with other nerd fonts for some reason.
+    s_font_icons_xsmall = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_24));
+    s_font_icons_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_38));
+    s_font_icons_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_49));
+    s_font_icons_large = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_65));
+#else
     s_font_primary_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_TERMINUS_MONO_14));
 
     // Specific fonts with limited characters.
@@ -67,6 +84,7 @@ void font_load(void) {
     s_font_icons_small = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_28));
     s_font_icons_medium = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_36));
     s_font_icons_large = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_ICONS_48));
+#endif
 }
 
 void font_unload(void) {
