@@ -108,6 +108,14 @@ module.exports = [
         defaultValue: true,
         description:
           "Disable this if you get popups due to health being disabled."
+      },
+      {
+        type: "toggle",
+        messageKey: "config_show_heart_rate",
+        label: "Show heart rate (supported watches only)",
+        defaultValue: false,
+        description:
+          "Show heart rate where the bluetooth icon normally appears (bluetooth icon moves to the top)."
       }
     ]
   },

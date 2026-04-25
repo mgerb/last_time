@@ -1,6 +1,7 @@
 #include "app_message.h"
 #include "assert.h"
 #include "log.h"
+#include "main.h"
 #include "pebble.h"
 #include "settings.h"
 #include "time.h"
@@ -12,7 +13,8 @@ static bool am_is_clay_message(DictionaryIterator *iterator) {
            dict_find(iterator, MESSAGE_KEY_config_vibrate_disconnect) ||
            dict_find(iterator, MESSAGE_KEY_config_vibrate_top_hour) ||
            dict_find(iterator, MESSAGE_KEY_config_weather_update_interval) ||
-           dict_find(iterator, MESSAGE_KEY_config_show_steps);
+           dict_find(iterator, MESSAGE_KEY_config_show_steps) ||
+           dict_find(iterator, MESSAGE_KEY_config_show_heart_rate);
 }
 
 static AM_MESSAGE_TYPE am_get_message_type(DictionaryIterator *iterator) {
@@ -38,6 +40,7 @@ static void am_inbox_received_callback(DictionaryIterator *iterator, void *conte
         // format depends on the settings.
         weather_refresh_temperature();
         time_update();
+        app_refresh_settings_dependent_layers();
         break;
     case AM_WEATHER:
         weather_inbox_received_callback(iterator, context);

@@ -11,6 +11,7 @@ typedef struct {
     bool show_steps;
     /** In minutes. */
     uint32_t weather_update_interval;
+    bool show_heart_rate;
 } AppSettings;
 
 void settings_load(void);

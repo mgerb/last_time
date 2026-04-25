@@ -1,3 +1,4 @@
+#include "main.h"
 #include "app_message.h"
 #include "battery.h"
 #include "bluetooth.h"
@@ -36,9 +37,28 @@ void load_top_right(Window *window) {
 #endif
     battery_load(window, row_height);
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
-        health_load(window, row_height);
+    health_load(window, row_height);
+#endif
+}
+
+static void unload_top_right(void) {
+    bluetooth_unload();
+    battery_unload();
+#if defined(PBL_HEALTH)
+    health_unload();
+#endif
+}
+
+void app_refresh_settings_dependent_layers(void) {
+    if (!s_window) {
+        return;
     }
+
+    unload_top_right();
+    load_top_right(s_window);
+    bluetooth_load(s_window);
+#if defined(PBL_HEALTH)
+    health_sync_service();
 #endif
 }
 
@@ -56,13 +76,7 @@ static void window_unload(Window *window) {
     time_unload();
     moon_unload();
     weather_unload();
-    bluetooth_unload();
-    battery_unload();
-#if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
-        health_unload();
-    }
-#endif
+    unload_top_right();
     font_unload();
 }
 
@@ -80,9 +94,7 @@ static void init(void) {
     battery_init();
     bluetooth_init();
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
-        health_init();
-    }
+    health_sync_service();
 #endif
 
     am_init();
@@ -92,9 +104,7 @@ static void deinit(void) {
     bluetooth_deinit();
     battery_deinit();
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
-        health_deinit();
-    }
+    health_deinit();
 #endif
     tick_timer_service_unsubscribe();
     window_destroy(s_window);
