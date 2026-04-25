@@ -1,5 +1,6 @@
 # Add paths for clangd so that we get some LSP support.
--I/home/mg/.pebble-sdk/SDKs/4.9.77/sdk-core/pebble/aplite/include
+-I/home/mg/.pebble-sdk/SDKs/current/sdk-core/pebble/aplite/include
 -I/home/mg/git/pebble/myproject/build/aplite
 -DPBL_HEALTH
 -DDEBUG
+-DPBL_PLATFORM_EMERY

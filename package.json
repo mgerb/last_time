@@ -15,6 +15,7 @@
       "aplite",
       "basalt",
       "diorite",
+      "emery",
       "flint"
     ],
     "watchapp": {
@@ -62,8 +63,26 @@
         },
         {
           "type": "font",
+          "name": "FONT_ICONS_24",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
+          "characterRegex": "[󰂯]"
+        },
+        {
+          "type": "font",
           "name": "FONT_ICONS_28",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[ ]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_ICONS_38",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
           "characterRegex": "[ ]"
         },
         {
@@ -74,8 +93,26 @@
         },
         {
           "type": "font",
+          "name": "FONT_ICONS_49",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
+          "characterRegex": "[]"
+        },
+        {
+          "type": "font",
           "name": "FONT_ICONS_48",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "characterRegex": "[]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_ICONS_65",
+          "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
           "characterRegex": "[]"
         },
         {
@@ -86,8 +123,25 @@
         },
         {
           "type": "font",
+          "name": "FONT_TERMINUS_MONO_15",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
+          "characterRegex": "[AMP]"
+        },
+        {
+          "type": "font",
           "name": "FONT_TERMINUS_MONO_14",
           "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
+        },
+        {
+          "type": "font",
+          "name": "FONT_TERMINUS_MONO_21",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "targetPlatforms": [
+            "emery"
+          ]
         },
         {
           "type": "font",
@@ -97,8 +151,26 @@
         },
         {
           "type": "font",
+          "name": "FONT_TERMINUS_MONO_33",
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
+          "characterRegex": "[0-9°\\-]"
+        },
+        {
+          "type": "font",
           "name": "FONT_DSEG_42",
           "file": "fonts/DSEG/DSEG7-Classic-MINI/DSEG7ClassicMini-Bold.ttf",
+          "characterRegex": "[0-9:]"
+        },
+        {
+          "type": "font",
+          "name": "FONT_DSEG_58",
+          "file": "fonts/DSEG/DSEG7-Classic-MINI/DSEG7ClassicMini-Bold.ttf",
+          "targetPlatforms": [
+            "emery"
+          ],
           "characterRegex": "[0-9:]"
         }
       ]

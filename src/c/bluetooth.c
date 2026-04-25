@@ -47,7 +47,11 @@ void bluetooth_load(Window *window) {
     GRect bounds = layer_get_bounds(window_layer);
 
     // Position icon on the right, just above the time container.
+#if defined(PBL_PLATFORM_EMERY)
+    int icon_y = (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - 22;
+#else
     int icon_y = (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - 14;
+#endif
     s_bluetooth_layer_icon =
         font_render_icon_xsmall(window_layer, ICON_BLUETOOTH_CONNECTED, PADDING_X, icon_y, true, false);
     text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);

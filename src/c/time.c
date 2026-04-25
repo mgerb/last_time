@@ -22,9 +22,21 @@ static char s_sunrise_buffer[6] = "--:--";
 static char s_sunset_buffer[6] = "--:--";
 static char s_ampm_buffer[3] = "";
 
+#if defined(PBL_PLATFORM_EMERY)
+const int TIME_CONTAINER_HEIGHT = 68;
+const int UTC_ROW_HEIGHT = 28;
+const int SOLAR_TIME_ROW_HEIGHT = 28;
+static const int DATE_HEIGHT = 26;
+static const int TIME_TEXT_HEIGHT = 58;
+static const int AMPM_HEIGHT = 18;
+#else
 const int TIME_CONTAINER_HEIGHT = 50;
 const int UTC_ROW_HEIGHT = 22;
 const int SOLAR_TIME_ROW_HEIGHT = 18;
+static const int DATE_HEIGHT = 18;
+static const int TIME_TEXT_HEIGHT = 42;
+static const int AMPM_HEIGHT = 12;
+#endif
 
 static void format_time(char *buffer, size_t buffer_size, struct tm *time_value) {
     if (clock_is_24h_style()) {
@@ -187,7 +199,7 @@ void time_load(Window *window) {
 
     // Lower container for date/day of week. Must be added before main time container.
     // It is the same height as the main time container, just shifted down a bit.
-    int date_height = 18;
+    int date_height = DATE_HEIGHT;
     s_date_layer_container = layer_create(GRect(0, (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) + date_height,
                                                 bounds.size.w, TIME_CONTAINER_HEIGHT));
     layer_set_update_proc(s_date_layer_container, date_layer_container_update);
@@ -218,7 +230,7 @@ void time_load(Window *window) {
     layer_add_child(window_layer, s_time_layer_container);
 
     // AM/PM indicator (12h mode only), top-left of the time container.
-    s_ampm_layer = text_layer_create(GRect(PADDING_X, 0, bounds.size.w, 12));
+    s_ampm_layer = text_layer_create(GRect(PADDING_X, 0, bounds.size.w, AMPM_HEIGHT));
     text_layer_set_font(s_ampm_layer, s_font_am_pm);
     text_layer_set_text_color(s_ampm_layer, THEME.text_color_secondary);
     text_layer_set_background_color(s_ampm_layer, GColorClear);
@@ -226,7 +238,7 @@ void time_load(Window *window) {
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_ampm_layer));
 
     // Main time display.
-    int time_height = 42;
+    int time_height = TIME_TEXT_HEIGHT;
     s_time_layer = text_layer_create(GRect(0, (TIME_CONTAINER_HEIGHT - time_height) / 2, bounds.size.w, time_height));
     text_layer_set_font(s_time_layer, s_font_time_large);
     text_layer_set_text_color(s_time_layer, THEME.text_color_secondary);

@@ -51,7 +51,7 @@
 ## Watches
 
 - Pebble 2 Duo
-- Pebble Time 2 (not yet supported)
+- Pebble Time 2
 
 ## Weather
 
