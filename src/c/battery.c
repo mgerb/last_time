@@ -5,6 +5,8 @@
 static TextLayer *s_battery_layer_text;
 static TextLayer *s_battery_layer_icon;
 
+int BATTERY_ROW_MAX_WIDTH = 0;
+
 /**
  * Update battery icon and text.
  */
@@ -34,25 +36,36 @@ void battery_init() {
     battery_state_service_subscribe(battery_update_handler);
 }
 
+// WARNING: Must be called before bluetooth loads.
 void battery_load(Window *window, int row_height) {
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
     // Battery icon.
-    s_battery_layer_icon = font_render_icon_small(window_layer, ICON_BATTERY_50, PADDING_X, 0, true, false);
+    s_battery_layer_icon = font_render_icon_small(window_layer, ICON_BATTERY_100, PADDING_X, 0, true, false);
     text_layer_set_text_color(s_battery_layer_icon, THEME.text_color);
 
     // Battery percentage.
     GRect battery_icon_bounds = layer_get_bounds(text_layer_get_layer(s_battery_layer_icon));
-    s_battery_layer_text =
-        text_layer_create(GRect(battery_icon_bounds.size.w - battery_icon_bounds.size.w, 0,
-                                bounds.size.w - battery_icon_bounds.size.w - PADDING_X - 2, row_height));
+    s_battery_layer_text = text_layer_create(
+        GRect(battery_icon_bounds.size.w - battery_icon_bounds.size.w, 0,
+              bounds.size.w - battery_icon_bounds.size.w - PADDING_X - BATTERY_TEXT_RIGHT_INSET, row_height));
 
     text_layer_set_text_alignment(s_battery_layer_text, GTextAlignmentRight);
     text_layer_set_font(s_battery_layer_text, s_font_primary_small);
     text_layer_set_text_color(s_battery_layer_text, THEME.text_color);
     text_layer_set_background_color(s_battery_layer_text, GColorClear);
     layer_add_child(window_layer, text_layer_get_layer(s_battery_layer_text));
+
+    // Set it to 100 so we can calculate the max width.
+    text_layer_set_text(s_battery_layer_text, "100");
+
+    // Before we call the update handler, calculate the max width of the
+    // battery text + icon.
+    GSize battery_icon_size = text_layer_get_content_size(s_battery_layer_icon);
+    GSize battery_text_size = text_layer_get_content_size(s_battery_layer_text);
+    BATTERY_ROW_MAX_WIDTH = battery_icon_size.w + battery_text_size.w;
+
     battery_update_handler(battery_state_service_peek());
 }
 

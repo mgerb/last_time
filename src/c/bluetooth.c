@@ -1,4 +1,6 @@
 #include "bluetooth.h"
+#include "battery.h"
+#include "health.h"
 #include "log.h"
 #include "pebble.h"
 #include "settings.h"
@@ -42,7 +44,8 @@ void bluetooth_deinit(void) {
     connection_service_unsubscribe();
 }
 
-void bluetooth_load(Window *window) {
+static void bluetooth_load_middle_right(Window *window) {
+
     Layer *window_layer = window_get_root_layer(window);
     GRect bounds = layer_get_bounds(window_layer);
 
@@ -55,6 +58,26 @@ void bluetooth_load(Window *window) {
     s_bluetooth_layer_icon =
         font_render_icon_xsmall(window_layer, ICON_BLUETOOTH_CONNECTED, PADDING_X, icon_y, true, false);
     text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
+}
+
+static void bluetooth_load_top(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+
+    int right_offset = PADDING_X + BATTERY_TEXT_RIGHT_INSET + BATTERY_ROW_MAX_WIDTH + 2;
+    int top_offset = 8;
+
+    s_bluetooth_layer_icon =
+        font_render_icon_xsmall(window_layer, ICON_BLUETOOTH_CONNECTED, right_offset, top_offset, true, false);
+    text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
+}
+
+// WARNING: Must be called after battery loads.
+void bluetooth_load(Window *window) {
+#ifdef HEART_RATE_SUPPORTED
+    bluetooth_load_top(window);
+#else
+    bluetooth_load_middle_right(window);
+#endif
 
     // Refresh state in case the initial peek happened before the service was ready.
     bluetooth_refresh_connected_state();
