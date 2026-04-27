@@ -19,6 +19,7 @@ extern const char *ICON_BATTERY_50;
 extern const char *ICON_BATTERY_75;
 extern const char *ICON_BATTERY_100;
 extern const char *ICON_STEPS;
+extern const char *ICON_HEART_RATE;
 extern const char *ICON_UTC;
 extern const char *ICON_BLUETOOTH_CONNECTED;
 extern const char *ICON_SUNRISE;

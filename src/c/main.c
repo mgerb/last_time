@@ -16,6 +16,16 @@
 
 static int s_last_vibrate_hour = -1;
 
+#if defined(PBL_HEALTH)
+static bool health_should_run(void) {
+#if defined(HEART_RATE_SUPPORTED)
+    return true;
+#else
+    return app_settings.show_steps;
+#endif
+}
+#endif
+
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     LOG_DEBUG("tick handler...");
     time_update();
@@ -36,7 +46,7 @@ void load_top_right(Window *window) {
 #endif
     battery_load(window, row_height);
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
+    if (health_should_run()) {
         health_load(window, row_height);
     }
 #endif
@@ -59,7 +69,7 @@ static void window_unload(Window *window) {
     bluetooth_unload();
     battery_unload();
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
+    if (health_should_run()) {
         health_unload();
     }
 #endif
@@ -80,7 +90,7 @@ static void init(void) {
     battery_init();
     bluetooth_init();
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
+    if (health_should_run()) {
         health_init();
     }
 #endif
@@ -92,7 +102,7 @@ static void deinit(void) {
     bluetooth_deinit();
     battery_deinit();
 #if defined(PBL_HEALTH)
-    if (app_settings.show_steps) {
+    if (health_should_run()) {
         health_deinit();
     }
 #endif
