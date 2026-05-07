@@ -45,7 +45,8 @@
       "config_vibrate_disconnect",
       "config_vibrate_top_hour",
       "config_weather_update_interval",
-      "config_show_steps"
+      "config_show_steps",
+      "config_show_heart_rate"
     ],
     "resources": {
       "media": [
@@ -74,7 +75,7 @@
           "type": "font",
           "name": "FONT_ICONS_28",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[ ]"
+          "characterRegex": "[ ]"
         },
         {
           "type": "font",
@@ -83,7 +84,7 @@
           "targetPlatforms": [
             "emery"
           ],
-          "characterRegex": "[ ]"
+          "characterRegex": "[ ]"
         },
         {
           "type": "font",

@@ -23,6 +23,7 @@
   - Weather icons (day/night)
 - Temperature (°F/°C)
 - Steps
+- Heart Rate
 - Battery level
   - Percentage
   - Icon
@@ -50,8 +51,8 @@
 
 ## Watches
 
-- Pebble 2 Duo
 - Pebble Time 2
+- Pebble 2 Duo
 
 ## Weather
 

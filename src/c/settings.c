@@ -12,22 +12,17 @@ static void settings_set_defaults(void) {
     app_settings.vibrate_top_hour = false;
     app_settings.show_steps = true;
     app_settings.weather_update_interval = 30;
+    app_settings.show_heart_rate = false;
 }
 
 void settings_load(void) {
+    settings_set_defaults();
+
     if (!persist_exists(SETTINGS_PERSIST_KEY)) {
-        settings_set_defaults();
         return;
     }
 
-    AppSettings loaded;
-    const int bytes = persist_read_data(SETTINGS_PERSIST_KEY, &loaded, sizeof(loaded));
-    if (bytes != (int)sizeof(loaded)) {
-        settings_set_defaults();
-        return;
-    }
-
-    app_settings = loaded;
+    persist_read_data(SETTINGS_PERSIST_KEY, &app_settings, sizeof(app_settings));
 }
 
 static void settings_save(void) {
@@ -56,6 +51,9 @@ void settings_update_from_message(DictionaryIterator *iter) {
 
     const Tuple *weather_update_interval_tuple = dict_find(iter, MESSAGE_KEY_config_weather_update_interval);
     app_settings.weather_update_interval = weather_update_interval_tuple->value->int32;
+
+    const Tuple *show_heart_rate_tuple = dict_find(iter, MESSAGE_KEY_config_show_heart_rate);
+    app_settings.show_heart_rate = show_heart_rate_tuple->value->int32 == 1;
 
     settings_save();
 }
