@@ -22,7 +22,9 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     time_update();
 
     if (app_settings.vibrate_top_hour && tick_time->tm_min == 0 && tick_time->tm_hour != s_last_vibrate_hour) {
-        vibes_short_pulse();
+        if (!quiet_time_is_active()) {
+            vibes_short_pulse();
+        }
         s_last_vibrate_hour = tick_time->tm_hour;
     }
 

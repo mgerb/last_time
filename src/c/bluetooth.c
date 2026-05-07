@@ -21,7 +21,7 @@ static void bluetooth_update_icon(void) {
 
 static void bluetooth_connection_handler(bool connected) {
     // Vibrate on connect/disconnect.
-    if (app_settings.vibrate_disconnect && connected != s_bluetooth_connected) {
+    if (app_settings.vibrate_disconnect && connected != s_bluetooth_connected && !quiet_time_is_active()) {
         vibes_short_pulse();
     }
 
