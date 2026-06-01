@@ -19,7 +19,7 @@ const char *ICON_BATTERY_100 = "";
 const char *ICON_STEPS = "";
 const char *ICON_HEART_RATE = "";
 const char *ICON_UTC = "";
-const char *ICON_BLUETOOTH_CONNECTED = "󰂯";
+const char *ICON_BLUETOOTH_CONNECTED = "";
 const char *ICON_SUNRISE = "";
 const char *ICON_SUNSET = "";
 

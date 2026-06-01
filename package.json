@@ -60,16 +60,13 @@
           "type": "font",
           "name": "FONT_ICONS_18",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "characterRegex": "[󰂯]"
+          "characterRegex": "[]"
         },
         {
           "type": "font",
           "name": "FONT_ICONS_24",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "targetPlatforms": [
-            "emery"
-          ],
-          "characterRegex": "[󰂯]"
+          "characterRegex": "[]"
         },
         {
           "type": "font",
@@ -81,9 +78,6 @@
           "type": "font",
           "name": "FONT_ICONS_38",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "targetPlatforms": [
-            "emery"
-          ],
           "characterRegex": "[ ]"
         },
         {
@@ -96,9 +90,6 @@
           "type": "font",
           "name": "FONT_ICONS_49",
           "file": "fonts/Lilex/LilexNerdFontMono-Regular.ttf",
-          "targetPlatforms": [
-            "emery"
-          ],
           "characterRegex": "[]"
         },
         {
@@ -126,9 +117,6 @@
           "type": "font",
           "name": "FONT_TERMINUS_MONO_15",
           "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
-          "targetPlatforms": [
-            "emery"
-          ],
           "characterRegex": "[AMP]"
         },
         {
@@ -139,10 +127,7 @@
         {
           "type": "font",
           "name": "FONT_TERMINUS_MONO_21",
-          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
-          "targetPlatforms": [
-            "emery"
-          ]
+          "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf"
         },
         {
           "type": "font",
@@ -154,9 +139,6 @@
           "type": "font",
           "name": "FONT_TERMINUS_MONO_33",
           "file": "fonts/Terminus/TerminessNerdFontMono-Bold.ttf",
-          "targetPlatforms": [
-            "emery"
-          ],
           "characterRegex": "[0-9°\\-]"
         },
         {
