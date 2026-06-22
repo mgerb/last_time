@@ -15,7 +15,7 @@ static void bluetooth_update_icon(void) {
     }
 
     layer_set_hidden(text_layer_get_layer(s_bluetooth_layer_icon), !s_bluetooth_connected);
-    text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
+    text_layer_set_text_color(s_bluetooth_layer_icon, app_settings.text_color);
     text_layer_set_text(s_bluetooth_layer_icon, ICON_BLUETOOTH_CONNECTED);
 }
 
@@ -57,7 +57,7 @@ static void bluetooth_load_middle_right(Window *window) {
 #endif
     s_bluetooth_layer_icon =
         font_render_icon_xsmall(window_layer, ICON_BLUETOOTH_CONNECTED, PADDING_X, icon_y, true, false);
-    text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
+    text_layer_set_text_color(s_bluetooth_layer_icon, app_settings.text_color);
 }
 
 #if defined(HEART_RATE_SUPPORTED)
@@ -69,7 +69,7 @@ static void bluetooth_load_top(Window *window) {
 
     s_bluetooth_layer_icon =
         font_render_icon_xsmall(window_layer, ICON_BLUETOOTH_CONNECTED, right_offset, top_offset, true, false);
-    text_layer_set_text_color(s_bluetooth_layer_icon, THEME.text_color);
+    text_layer_set_text_color(s_bluetooth_layer_icon, app_settings.text_color);
 }
 #endif
 

@@ -174,11 +174,11 @@ int border_radius = 4;
 
 static void time_layer_container_update(Layer *layer, GContext *ctx) {
     GRect bounds = layer_get_bounds(layer);
-    graphics_context_set_fill_color(ctx, THEME.bg_color_secondary);
+    graphics_context_set_fill_color(ctx, app_settings.bg_color_secondary);
     graphics_fill_rect(ctx, layer_get_bounds(layer), border_radius, GCornerTopLeft | GCornerTopRight);
 
     // Border separating main time from the date below.
-    graphics_context_set_stroke_color(ctx, THEME.text_color_secondary);
+    graphics_context_set_stroke_color(ctx, app_settings.text_color_secondary);
     graphics_context_set_stroke_width(ctx, 1);
     graphics_draw_line(ctx, GPoint(bounds.origin.x, bounds.origin.y + bounds.size.h - 1),
                        GPoint(bounds.origin.x + bounds.size.w - 1, bounds.origin.y + bounds.size.h - 1));
@@ -189,7 +189,7 @@ static void date_layer_container_update(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_width(ctx, 2);
 
     // Fill.
-    graphics_context_set_fill_color(ctx, THEME.bg_color_secondary);
+    graphics_context_set_fill_color(ctx, app_settings.bg_color_secondary);
     graphics_fill_rect(ctx, layer_get_bounds(layer), border_radius, GCornersAll);
 }
 
@@ -210,7 +210,7 @@ void time_load(Window *window) {
     int date_y = s_date_layer_container_frame.origin.y + s_date_layer_container_frame.size.h - date_height;
     s_date_layer = text_layer_create(GRect(0, date_y, bounds.size.w - PADDING_X, date_height));
     text_layer_set_font(s_date_layer, s_font_primary_small);
-    text_layer_set_text_color(s_date_layer, THEME.text_color_secondary);
+    text_layer_set_text_color(s_date_layer, app_settings.text_color_secondary);
     text_layer_set_background_color(s_date_layer, GColorClear);
     text_layer_set_text_alignment(s_date_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
@@ -218,7 +218,7 @@ void time_load(Window *window) {
     // Day of the week.
     s_day_layer = text_layer_create(GRect(PADDING_X, date_y, bounds.size.w, date_height));
     text_layer_set_font(s_day_layer, s_font_primary_small);
-    text_layer_set_text_color(s_day_layer, THEME.text_color_secondary);
+    text_layer_set_text_color(s_day_layer, app_settings.text_color_secondary);
     text_layer_set_background_color(s_day_layer, GColorClear);
     text_layer_set_text_alignment(s_day_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(s_day_layer));
@@ -232,7 +232,7 @@ void time_load(Window *window) {
     // AM/PM indicator (12h mode only), top-left of the time container.
     s_ampm_layer = text_layer_create(GRect(PADDING_X, 0, bounds.size.w, AMPM_HEIGHT));
     text_layer_set_font(s_ampm_layer, s_font_am_pm);
-    text_layer_set_text_color(s_ampm_layer, THEME.text_color_secondary);
+    text_layer_set_text_color(s_ampm_layer, app_settings.text_color_secondary);
     text_layer_set_background_color(s_ampm_layer, GColorClear);
     text_layer_set_text_alignment(s_ampm_layer, GTextAlignmentLeft);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_ampm_layer));
@@ -241,7 +241,7 @@ void time_load(Window *window) {
     int time_height = TIME_TEXT_HEIGHT;
     s_time_layer = text_layer_create(GRect(0, (TIME_CONTAINER_HEIGHT - time_height) / 2, bounds.size.w, time_height));
     text_layer_set_font(s_time_layer, s_font_time_large);
-    text_layer_set_text_color(s_time_layer, THEME.text_color_secondary);
+    text_layer_set_text_color(s_time_layer, app_settings.text_color_secondary);
     text_layer_set_background_color(s_time_layer, GColorClear);
     text_layer_set_text_alignment(s_time_layer, GTextAlignmentRight);
     layer_add_child(s_time_layer_container, text_layer_get_layer(s_time_layer));
@@ -249,14 +249,14 @@ void time_load(Window *window) {
     // Sunrise time.
     s_sunrise_icon_layer = font_render_icon_small(window_layer, ICON_SUNRISE, PADDING_X,
                                                   bounds.size.h - SOLAR_TIME_ROW_HEIGHT, false, false);
-    text_layer_set_text_color(s_sunrise_icon_layer, THEME.text_color);
+    text_layer_set_text_color(s_sunrise_icon_layer, app_settings.text_color);
     GRect sunrise_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunrise_icon_layer));
 
     s_sunrise_layer = text_layer_create(
         GRect(PADDING_X + sunrise_icon_bounds.size.w + PADDING_X, bounds.size.h - SOLAR_TIME_ROW_HEIGHT,
               bounds.size.w - sunrise_icon_bounds.size.w - (PADDING_X * 2), SOLAR_TIME_ROW_HEIGHT));
     text_layer_set_font(s_sunrise_layer, s_font_primary_small);
-    text_layer_set_text_color(s_sunrise_layer, THEME.text_color);
+    text_layer_set_text_color(s_sunrise_layer, app_settings.text_color);
     text_layer_set_background_color(s_sunrise_layer, GColorClear);
     text_layer_set_text_alignment(s_sunrise_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(s_sunrise_layer));
@@ -264,14 +264,14 @@ void time_load(Window *window) {
     // Sunset time mirrored on the right.
     s_sunset_icon_layer = font_render_icon_small(window_layer, ICON_SUNSET, PADDING_X,
                                                  bounds.size.h - SOLAR_TIME_ROW_HEIGHT, true, false);
-    text_layer_set_text_color(s_sunset_icon_layer, THEME.text_color);
+    text_layer_set_text_color(s_sunset_icon_layer, app_settings.text_color);
     GRect sunset_icon_bounds = layer_get_bounds(text_layer_get_layer(s_sunset_icon_layer));
 
     int sunset_text_width = bounds.size.w - sunset_icon_bounds.size.w - (PADDING_X * 2);
     s_sunset_layer =
         text_layer_create(GRect(0, bounds.size.h - SOLAR_TIME_ROW_HEIGHT, sunset_text_width, SOLAR_TIME_ROW_HEIGHT));
     text_layer_set_font(s_sunset_layer, s_font_primary_small);
-    text_layer_set_text_color(s_sunset_layer, THEME.text_color);
+    text_layer_set_text_color(s_sunset_layer, app_settings.text_color);
     text_layer_set_background_color(s_sunset_layer, GColorClear);
     text_layer_set_text_alignment(s_sunset_layer, GTextAlignmentRight);
     layer_add_child(window_layer, text_layer_get_layer(s_sunset_layer));
@@ -279,13 +279,13 @@ void time_load(Window *window) {
     // UTC time.
     int utc_y = bounds.size.h - SOLAR_TIME_ROW_HEIGHT - UTC_ROW_HEIGHT + 2;
     s_utc_icon_layer = font_render_icon_small(window_layer, ICON_UTC, PADDING_X, utc_y, false, false);
-    text_layer_set_text_color(s_utc_icon_layer, THEME.text_color);
+    text_layer_set_text_color(s_utc_icon_layer, app_settings.text_color);
     GRect utc_icon_bounds = layer_get_bounds(text_layer_get_layer(s_utc_icon_layer));
 
     s_utc_layer = text_layer_create(GRect(PADDING_X + utc_icon_bounds.size.w + PADDING_X, utc_y,
                                           bounds.size.w - utc_icon_bounds.size.w - (PADDING_X * 2), UTC_ROW_HEIGHT));
     text_layer_set_font(s_utc_layer, s_font_primary_small);
-    text_layer_set_text_color(s_utc_layer, THEME.text_color);
+    text_layer_set_text_color(s_utc_layer, app_settings.text_color);
     text_layer_set_background_color(s_utc_layer, GColorClear);
     text_layer_set_text_alignment(s_utc_layer, GTextAlignmentLeft);
     layer_add_child(window_layer, text_layer_get_layer(s_utc_layer));

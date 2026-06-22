@@ -338,7 +338,7 @@ void weather_load(Window *window) {
     // Temperature text (top-left).
     s_temperature_layer = text_layer_create(GRect(PADDING_X, 2, 80, temperature_row_height));
     text_layer_set_font(s_temperature_layer, s_font_temperature);
-    text_layer_set_text_color(s_temperature_layer, THEME.text_color);
+    text_layer_set_text_color(s_temperature_layer, app_settings.text_color);
     text_layer_set_background_color(s_temperature_layer, GColorClear);
     text_layer_set_text_alignment(s_temperature_layer, GTextAlignmentLeft);
     weather_refresh_temperature();
@@ -349,7 +349,7 @@ void weather_load(Window *window) {
     s_weather_updated_layer =
         text_layer_create(GRect(PADDING_X, temperature_row_height + 2, bounds.size.w, conditions_row_height));
     text_layer_set_font(s_weather_updated_layer, s_font_primary_small);
-    text_layer_set_text_color(s_weather_updated_layer, THEME.text_color);
+    text_layer_set_text_color(s_weather_updated_layer, app_settings.text_color);
     text_layer_set_background_color(s_weather_updated_layer, GColorClear);
     text_layer_set_text_alignment(s_weather_updated_layer, GTextAlignmentLeft);
     weather_refresh_updated_at();
@@ -359,7 +359,7 @@ void weather_load(Window *window) {
     // Weather icon sits to the right of the temperature.
     s_weather_layer_icon =
         font_render_icon_large(window_layer, weather_get_condition_icon(), PADDING_X, -3, false, false);
-    text_layer_set_text_color(s_weather_layer_icon, THEME.text_color);
+    text_layer_set_text_color(s_weather_layer_icon, app_settings.text_color);
     weather_position_icon();
 
     // Weather condition under the temperature/icon.
@@ -367,7 +367,7 @@ void weather_load(Window *window) {
         GRect(PADDING_X, (bounds.size.h / 2) - (TIME_CONTAINER_HEIGHT / 2) - conditions_row_height - 4, bounds.size.w,
               conditions_row_height));
     text_layer_set_font(s_condition_layer, s_font_primary_small);
-    text_layer_set_text_color(s_condition_layer, THEME.text_color);
+    text_layer_set_text_color(s_condition_layer, app_settings.text_color);
     text_layer_set_background_color(s_condition_layer, GColorClear);
     text_layer_set_text_alignment(s_condition_layer, GTextAlignmentLeft);
     text_layer_set_text(s_condition_layer, s_condition_buffer);

@@ -46,7 +46,11 @@
       "config_vibrate_top_hour",
       "config_weather_update_interval",
       "config_show_steps",
-      "config_show_heart_rate"
+      "config_show_heart_rate",
+      "config_text_color",
+      "config_text_color_secondary",
+      "config_bg_color",
+      "config_bg_color_secondary"
     ],
     "resources": {
       "media": [

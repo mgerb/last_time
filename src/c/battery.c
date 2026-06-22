@@ -1,6 +1,7 @@
 #include "battery.h"
 #include "common.h"
 #include "font.h"
+#include "settings.h"
 
 static TextLayer *s_battery_layer_text;
 static TextLayer *s_battery_layer_icon;
@@ -43,7 +44,7 @@ void battery_load(Window *window, int row_height) {
 
     // Battery icon.
     s_battery_layer_icon = font_render_icon_small(window_layer, ICON_BATTERY_100, PADDING_X, 0, true, false);
-    text_layer_set_text_color(s_battery_layer_icon, THEME.text_color);
+    text_layer_set_text_color(s_battery_layer_icon, app_settings.text_color);
 
     // Battery percentage.
     GRect battery_icon_bounds = layer_get_bounds(text_layer_get_layer(s_battery_layer_icon));
@@ -53,7 +54,7 @@ void battery_load(Window *window, int row_height) {
 
     text_layer_set_text_alignment(s_battery_layer_text, GTextAlignmentRight);
     text_layer_set_font(s_battery_layer_text, s_font_primary_small);
-    text_layer_set_text_color(s_battery_layer_text, THEME.text_color);
+    text_layer_set_text_color(s_battery_layer_text, app_settings.text_color);
     text_layer_set_background_color(s_battery_layer_text, GColorClear);
     layer_add_child(window_layer, text_layer_get_layer(s_battery_layer_text));
 

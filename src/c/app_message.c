@@ -14,7 +14,11 @@ static bool am_is_clay_message(DictionaryIterator *iterator) {
            dict_find(iterator, MESSAGE_KEY_config_vibrate_top_hour) ||
            dict_find(iterator, MESSAGE_KEY_config_weather_update_interval) ||
            dict_find(iterator, MESSAGE_KEY_config_show_steps) ||
-           dict_find(iterator, MESSAGE_KEY_config_show_heart_rate);
+           dict_find(iterator, MESSAGE_KEY_config_show_heart_rate) ||
+           dict_find(iterator, MESSAGE_KEY_config_text_color) ||
+           dict_find(iterator, MESSAGE_KEY_config_text_color_secondary) ||
+           dict_find(iterator, MESSAGE_KEY_config_bg_color) ||
+           dict_find(iterator, MESSAGE_KEY_config_bg_color_secondary);
 }
 
 static AM_MESSAGE_TYPE am_get_message_type(DictionaryIterator *iterator) {

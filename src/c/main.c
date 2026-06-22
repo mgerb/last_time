@@ -51,19 +51,6 @@ static void unload_top_right(void) {
 #endif
 }
 
-void app_refresh_settings_dependent_layers(void) {
-    if (!s_window) {
-        return;
-    }
-
-    unload_top_right();
-    load_top_right(s_window);
-    bluetooth_load(s_window);
-#if defined(PBL_HEALTH)
-    health_sync_service();
-#endif
-}
-
 static void window_load(Window *window) {
     font_load();
     time_load(window);
@@ -71,7 +58,7 @@ static void window_load(Window *window) {
     load_top_right(window);
     bluetooth_load(window);
     weather_load(window);
-    window_set_background_color(window, THEME.bg_color);
+    window_set_background_color(window, app_settings.bg_color);
 }
 
 static void window_unload(Window *window) {
@@ -80,6 +67,19 @@ static void window_unload(Window *window) {
     weather_unload();
     unload_top_right();
     font_unload();
+}
+
+void app_refresh_settings_dependent_layers(void) {
+    if (!s_window) {
+        return;
+    }
+
+    window_unload(s_window);
+    window_load(s_window);
+
+#if defined(PBL_HEALTH)
+    health_sync_service();
+#endif
 }
 
 static void init(void) {

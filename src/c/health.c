@@ -110,14 +110,14 @@ void health_load(Window *window, int row_height) {
     if (app_settings.show_steps) {
         int steps_y = row_height + 2;
         s_steps_layer_icon = font_render_icon_small(window_layer, ICON_STEPS, PADDING_X, steps_y, true, false);
-        text_layer_set_text_color(s_steps_layer_icon, THEME.text_color);
+        text_layer_set_text_color(s_steps_layer_icon, app_settings.text_color);
         GRect steps_icon_bounds = layer_get_bounds(text_layer_get_layer(s_steps_layer_icon));
 
         s_steps_layer_text =
             text_layer_create(GRect(0, steps_y, bounds.size.w - steps_icon_bounds.size.w - PADDING_X - 2, row_height));
         text_layer_set_text_alignment(s_steps_layer_text, GTextAlignmentRight);
         text_layer_set_font(s_steps_layer_text, s_font_primary_small);
-        text_layer_set_text_color(s_steps_layer_text, THEME.text_color);
+        text_layer_set_text_color(s_steps_layer_text, app_settings.text_color);
         text_layer_set_background_color(s_steps_layer_text, GColorClear);
         layer_add_child(window_layer, text_layer_get_layer(s_steps_layer_text));
     }
@@ -133,14 +133,14 @@ void health_load(Window *window, int row_height) {
     if (app_settings.show_heart_rate) {
         s_heart_rate_layer_icon =
             font_render_icon_small(window_layer, ICON_HEART_RATE, PADDING_X, heart_rate_y, true, false);
-        text_layer_set_text_color(s_heart_rate_layer_icon, THEME.text_color);
+        text_layer_set_text_color(s_heart_rate_layer_icon, app_settings.text_color);
         GRect heart_rate_icon_bounds = layer_get_bounds(text_layer_get_layer(s_heart_rate_layer_icon));
 
         s_heart_rate_layer_text = text_layer_create(
             GRect(0, heart_rate_y, bounds.size.w - heart_rate_icon_bounds.size.w - PADDING_X - 2, row_height));
         text_layer_set_text_alignment(s_heart_rate_layer_text, GTextAlignmentRight);
         text_layer_set_font(s_heart_rate_layer_text, s_font_primary_small);
-        text_layer_set_text_color(s_heart_rate_layer_text, THEME.text_color);
+        text_layer_set_text_color(s_heart_rate_layer_text, app_settings.text_color);
         text_layer_set_background_color(s_heart_rate_layer_text, GColorClear);
         layer_add_child(window_layer, text_layer_get_layer(s_heart_rate_layer_text));
     }

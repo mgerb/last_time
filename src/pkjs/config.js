@@ -120,6 +120,40 @@ module.exports = [
     ]
   },
   {
+    type: "heading",
+    defaultValue: "Colors",
+    size: 2
+  },
+  {
+    type: "section",
+    items: [
+      {
+        type: "color",
+        messageKey: "config_text_color",
+        defaultValue: "ffffff",
+        label: "Text Color"
+      },
+      {
+        type: "color",
+        messageKey: "config_text_color_secondary",
+        defaultValue: "000000",
+        label: "Text Color Secondary"
+      },
+      {
+        type: "color",
+        messageKey: "config_bg_color",
+        defaultValue: "000000",
+        label: "Background Color"
+      },
+      {
+        type: "color",
+        messageKey: "config_bg_color_secondary",
+        defaultValue: "ffffff",
+        label: "Background Color Secondary"
+      }
+    ]
+  },
+  {
     type: "submit",
     defaultValue: "Save Settings"
   }
