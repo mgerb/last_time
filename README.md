@@ -37,6 +37,7 @@
     past sunset, then the sunset time displayed will
     be for the following day.
 - Moon phase
+- Configurable colors
 
 ## Settings
 
