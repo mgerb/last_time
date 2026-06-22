@@ -49,6 +49,9 @@
 - Vibrate on connect/disconnect
 - Vibrate on the hour
 - Weather Update Interval (minutes)
+- Show steps
+- Show heart rate
+- Colors
 
 ## Watches
 
