@@ -23,14 +23,14 @@
   - Weather icons (day/night)
 - Temperature (°F/°C)
 - Steps
-- Heart Rate
+- Heart rate
 - Battery level
   - Percentage
   - Icon
 - Bluetooth status (connected/disconnected)
 - Vibrate on Bluetooth disconnect
 - Vibrate on the hour
-- UTC time
+- Secondary time
 - Sunrise/sunset
   - Displays the upcoming sunrise/sunset times.
     For example, if the current time is a few minutes
@@ -41,17 +41,24 @@
 
 ## Settings
 
-- Temperature Unit
-  - °F
-  - °C
-- Date Format
-- Date Separator
+- Temperature unit
+  - Fahrenheit (°F)
+  - Celsius (°C)
+- Date format
+- Date separator
 - Vibrate on connect/disconnect
 - Vibrate on the hour
-- Weather Update Interval (minutes)
-- Show steps
-- Show heart rate
+- Weather update interval (minutes)
+- Show steps (requires health)
+- Show heart rate (supported watches only)
+- Secondary time
+  - UTC offset (minutes)
+  - 24h clock
 - Colors
+  - Text color
+  - Secondary text color
+  - Background color
+  - Secondary background color
 
 ## Watches
 

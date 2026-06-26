@@ -14,7 +14,7 @@ module.exports = [
   {
     type: "text",
     defaultValue:
-      "If you encounter a bug, please open a new issue on the Github page."
+      "If you encounter a bug, please open a new issue on the GitHub page."
   },
   {
     type: "section",
@@ -23,7 +23,7 @@ module.exports = [
         type: "select",
         messageKey: "config_temperature",
         defaultValue: "f",
-        label: "Temperature Unit",
+        label: "Temperature unit",
         options: [
           {
             label: "Fahrenheit (F)",
@@ -39,7 +39,7 @@ module.exports = [
         type: "select",
         messageKey: "config_date_format",
         defaultValue: "MM-DD",
-        label: "Date Format",
+        label: "Date format",
         options: [
           {
             label: "MM-DD",
@@ -63,7 +63,7 @@ module.exports = [
         type: "select",
         messageKey: "config_date_separator",
         defaultValue: "-",
-        label: "Date Separator",
+        label: "Date separator",
         options: [
           {
             label: "-",
@@ -95,7 +95,7 @@ module.exports = [
         type: "slider",
         messageKey: "config_weather_update_interval",
         defaultValue: 30,
-        label: "Weather Update Interval (minutes)",
+        label: "Weather update interval (minutes)",
         description: "",
         min: 1,
         max: 60,
@@ -115,7 +115,33 @@ module.exports = [
         label: "Show heart rate (supported watches only)",
         defaultValue: false,
         description:
-          "Show heart rate where the bluetooth icon normally appears (bluetooth icon moves to the top)."
+          "Show heart rate where the Bluetooth icon normally appears (Bluetooth icon moves to the top)."
+      }
+    ]
+  },
+  {
+    type: "heading",
+    defaultValue: "Secondary time",
+    size: 2
+  },
+  {
+    type: "section",
+    items: [
+      {
+        type: "slider",
+        messageKey: "config_utc_offset_minutes",
+        defaultValue: 0,
+        label: "UTC offset (minutes)",
+        description: "e.g. UTC-5 = -300, UTC+5:30 = 330, etc.",
+        min: -720,
+        max: 840,
+        step: 15
+      },
+      {
+        type: "toggle",
+        messageKey: "config_utc_time_24h",
+        label: "24h clock",
+        defaultValue: true
       }
     ]
   },
@@ -131,30 +157,30 @@ module.exports = [
         type: "color",
         messageKey: "config_text_color",
         defaultValue: "ffffff",
-        label: "Text Color"
+        label: "Text color"
       },
       {
         type: "color",
         messageKey: "config_text_color_secondary",
         defaultValue: "000000",
-        label: "Text Color Secondary"
+        label: "Secondary text color"
       },
       {
         type: "color",
         messageKey: "config_bg_color",
         defaultValue: "000000",
-        label: "Background Color"
+        label: "Background color"
       },
       {
         type: "color",
         messageKey: "config_bg_color_secondary",
         defaultValue: "ffffff",
-        label: "Background Color Secondary"
+        label: "Secondary background color"
       }
     ]
   },
   {
     type: "submit",
-    defaultValue: "Save Settings"
+    defaultValue: "Save settings"
   }
 ];

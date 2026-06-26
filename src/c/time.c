@@ -112,11 +112,18 @@ static void time_update_date_and_day(void) {
 }
 
 static void time_update_utc(void) {
-    time_t now = time(NULL);
+    time_t now = time(NULL) + (app_settings.utc_offset_minutes * SECONDS_PER_MINUTE);
     struct tm *t = gmtime(&now);
 
     static char utc_buffer[6];
-    strftime(utc_buffer, sizeof(utc_buffer), "%H:%M", t);
+    if (app_settings.utc_time_24h) {
+        strftime(utc_buffer, sizeof(utc_buffer), "%H:%M", t);
+    } else {
+        strftime(utc_buffer, sizeof(utc_buffer), "%I:%M", t);
+        if (utc_buffer[0] == '0') {
+            memmove(utc_buffer, utc_buffer + 1, sizeof(utc_buffer) - 1);
+        }
+    }
 
     text_layer_set_text(s_utc_layer, utc_buffer);
 }

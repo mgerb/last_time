@@ -4,7 +4,7 @@
 // The settings version is used to manage migrations. When the
 // settings struct changes, increment this version and then
 // handle the migrations in settings_load.
-#define SETTINGS_VERSION 2
+#define SETTINGS_VERSION 3
 
 #define SETTINGS_VERSION_KEY 10
 #define SETTINGS_PERSIST_KEY 2
@@ -33,6 +33,8 @@ static void settings_set_defaults(void) {
     app_settings.text_color_secondary = (GColor){.argb = GColorBlackARGB8};
     app_settings.bg_color = (GColor){.argb = GColorBlackARGB8};
     app_settings.bg_color_secondary = (GColor){.argb = GColorWhiteARGB8};
+    app_settings.utc_offset_minutes = 0;
+    app_settings.utc_time_24h = true;
 }
 
 static void settings_save(void) {
@@ -75,8 +77,26 @@ void settings_load(void) {
         // This is the happy path.
         if (settings_version == SETTINGS_VERSION) {
             persist_read_data(SETTINGS_PERSIST_KEY, &app_settings, sizeof(app_settings));
+        } else if (settings_version == 2 && persist_get_size(SETTINGS_PERSIST_KEY) == sizeof(LegacyAppSettings2)) {
+            LegacyAppSettings2 legacy;
+            persist_read_data(SETTINGS_PERSIST_KEY, &legacy, sizeof(LegacyAppSettings2));
+
+            snprintf(app_settings.temperature, sizeof(app_settings.temperature), "%s", legacy.temperature);
+            snprintf(app_settings.date_format, sizeof(app_settings.date_format), "%s", legacy.date_format);
+            snprintf(app_settings.date_separator, sizeof(app_settings.date_separator), "%s", legacy.date_separator);
+
+            app_settings.vibrate_disconnect = legacy.vibrate_disconnect;
+            app_settings.vibrate_top_hour = legacy.vibrate_top_hour;
+            app_settings.show_steps = legacy.show_steps;
+            app_settings.weather_update_interval = legacy.weather_update_interval;
+            app_settings.show_heart_rate = legacy.show_heart_rate;
+            app_settings.text_color = legacy.text_color;
+            app_settings.text_color_secondary = legacy.text_color_secondary;
+            app_settings.bg_color = legacy.bg_color;
+            app_settings.bg_color_secondary = legacy.bg_color_secondary;
+
+            settings_save();
         }
-        // NOTE: Future migrations will be handled here by checking the settings_version.
     }
 }
 
@@ -102,6 +122,12 @@ void settings_update_from_message(DictionaryIterator *iter) {
 
     const Tuple *weather_update_interval_tuple = dict_find(iter, MESSAGE_KEY_config_weather_update_interval);
     app_settings.weather_update_interval = weather_update_interval_tuple->value->int32;
+
+    const Tuple *utc_offset_minutes_tuple = dict_find(iter, MESSAGE_KEY_config_utc_offset_minutes);
+    app_settings.utc_offset_minutes = utc_offset_minutes_tuple->value->int32;
+
+    const Tuple *utc_time_24h_tuple = dict_find(iter, MESSAGE_KEY_config_utc_time_24h);
+    app_settings.utc_time_24h = utc_time_24h_tuple->value->int32 == 1;
 
     const Tuple *show_heart_rate_tuple = dict_find(iter, MESSAGE_KEY_config_show_heart_rate);
     app_settings.show_heart_rate = show_heart_rate_tuple->value->int32 == 1;
