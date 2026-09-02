@@ -121,6 +121,67 @@ module.exports = [
   },
   {
     type: "heading",
+    defaultValue: "Location",
+    size: 2
+  },
+  {
+    type: "section",
+    items: [
+      {
+        type: "toggle",
+        messageKey: "config_location_high_accuracy",
+        label: "High accuracy location",
+        defaultValue: true,
+        description:
+          "Request a more precise location. This may use more battery."
+      },
+      {
+        type: "toggle",
+        messageKey: "config_location_cache",
+        label: "Cache location",
+        defaultValue: false,
+        description:
+          "If unable to get location, use the most recently cached location."
+      },
+      {
+        type: "toggle",
+        messageKey: "config_location_override",
+        label: "Override location",
+        defaultValue: false,
+        description: "Use the coordinates below instead of your phone location."
+      },
+      {
+        type: "input",
+        messageKey: "config_location_latitude",
+        label: "Latitude",
+        defaultValue: "",
+        description: "Valid range: -90.00000 to 90.00000",
+        attributes: {
+          type: "number",
+          min: -90,
+          max: 90,
+          step: "any",
+          placeholder: "e.g. 41.87810"
+        }
+      },
+      {
+        type: "input",
+        messageKey: "config_location_longitude",
+        label: "Longitude",
+        defaultValue: "",
+        description: "Valid range: -180.00000 to 180.00000",
+        attributes: {
+          type: "number",
+          min: -180,
+          max: 180,
+          step: "any",
+          placeholder: "e.g. -87.62980"
+        }
+      }
+    ]
+  },
+  {
+    type: "heading",
     defaultValue: "Secondary time",
     size: 2
   },
