@@ -49,6 +49,12 @@
 - Vibrate on connect/disconnect
 - Vibrate on the hour
 - Weather update interval (minutes)
+- Location
+  - High accuracy location
+  - Cache location
+  - Override location
+    - Latitude
+    - Longitude
 - Show steps (requires health)
 - Show heart rate (supported watches only)
 - Secondary time

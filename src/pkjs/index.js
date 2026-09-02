@@ -4,8 +4,20 @@ const suncalc = require("./suncalc");
 var Clay = require("@rebble/clay");
 // Load our Clay configuration file
 var clayConfig = require("./config");
-// Initialize Clay
-var clay = new Clay(clayConfig);
+// Disable autoHandleEvents so that we can remove keys before sending
+// data to the watch. We don't want to share all data with the watch.
+var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
+
+const CLAY_SETTINGS_KEY = "clay-settings";
+
+// These settings will not be sent to the watch. We only need them on the JS (phone) side.
+const EXCLUDED_SETTING_KEYS = [
+  "config_location_high_accuracy",
+  "config_location_cache",
+  "config_location_override",
+  "config_location_latitude",
+  "config_location_longitude"
+];
 
 const ERRORS = {
   unknown: 0,
@@ -123,9 +135,47 @@ function getWeatherFromLocation(lat, lon, callback) {
   xhrRequest(url, "GET", callback);
 }
 
-function locationSuccess(pos) {
-  var latitude = pos.coords.latitude;
-  var longitude = pos.coords.longitude;
+function getStoredSettings() {
+  try {
+    var settings = JSON.parse(localStorage.getItem(CLAY_SETTINGS_KEY)) || {};
+    if (typeof settings !== "object" || Array.isArray(settings)) {
+      return {};
+    }
+    return settings;
+  } catch (e) {
+    console.log("Unable to read stored settings:", e);
+    return {};
+  }
+}
+
+function parseCoordinate(value, min, max) {
+  if (
+    value === null ||
+    typeof value === "undefined" ||
+    (typeof value === "string" && value.trim() === "")
+  ) {
+    return null;
+  }
+
+  var coordinate = Number(value);
+  if (!isFinite(coordinate) || coordinate < min || coordinate > max) {
+    return null;
+  }
+  return coordinate;
+}
+
+function getLocationSettings() {
+  var settings = getStoredSettings();
+  return {
+    highAccuracy: settings.config_location_high_accuracy !== false,
+    cache: settings.config_location_cache === true,
+    override: settings.config_location_override === true,
+    latitude: parseCoordinate(settings.config_location_latitude, -90, 90),
+    longitude: parseCoordinate(settings.config_location_longitude, -180, 180)
+  };
+}
+
+function getWeatherForCoordinates(latitude, longitude) {
   getWeatherFromLocation(latitude, longitude, function (err, resp) {
     if (err) {
       notifyWatchOfError(ERRORS.http);
@@ -202,16 +252,74 @@ function locationError(err) {
 }
 
 function getWeather() {
-  navigator.geolocation.getCurrentPosition(locationSuccess, locationError, {
-    enableHighAccuracy: true,
-    timeout: 15000,
-    maximumAge: 0 // Force GPS instead of cached wifi location.
-  });
+  var locationSettings = getLocationSettings();
+
+  if (locationSettings.override) {
+    if (
+      locationSettings.latitude !== null &&
+      locationSettings.longitude !== null
+    ) {
+      getWeatherForCoordinates(
+        locationSettings.latitude,
+        locationSettings.longitude
+      );
+      return;
+    }
+
+    console.log(
+      "Location override is enabled, but the coordinates are invalid. Falling back to phone location."
+    );
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      getWeatherForCoordinates(pos.coords.latitude, pos.coords.longitude);
+    },
+    locationError,
+    {
+      enableHighAccuracy: locationSettings.highAccuracy,
+      timeout: 15000,
+      maximumAge: locationSettings.cache ? Infinity : 0
+    }
+  );
 }
 
 // Listen for when the watchface is opened
 Pebble.addEventListener("ready", function (e) {
   console.log("PebbleKit JS ready!");
+});
+
+Pebble.addEventListener("showConfiguration", function () {
+  Pebble.openURL(clay.generateUrl());
+});
+
+Pebble.addEventListener("webviewclosed", function (e) {
+  if (!e || !e.response) {
+    return;
+  }
+
+  var settings;
+  try {
+    settings = clay.getSettings(e.response, false);
+  } catch (err) {
+    console.log("Unable to save config data:", err);
+    return;
+  }
+
+  EXCLUDED_SETTING_KEYS.forEach(function (key) {
+    delete settings[key];
+  });
+
+  var watchSettings = Clay.prepareSettingsForAppMessage(settings);
+  Pebble.sendAppMessage(
+    watchSettings,
+    function () {
+      console.log("Sent config data to Pebble");
+    },
+    function (err) {
+      console.log("Failed to send config data!", err);
+    }
+  );
 });
 
 // Listen for when an AppMessage is received
